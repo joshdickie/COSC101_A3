@@ -4,9 +4,9 @@
 
 //declare variables
 boolean gameOver, pause;
-boolean forward, reverse, left, right;
+boolean inForward, inReverse, inLeft, inRight; //movement inputs
 PVector shipPos, shipVel, shipDir;
-float maxVel, shipAcc, shipScale;
+float maxVel, shipAcc, shipDrag, shipScale;
 PShape ship;
 
 void setup() {
@@ -16,13 +16,15 @@ void setup() {
     //load images and set parameters based on image sizes
 
     //initialise variables
-    shipPos = new PVector(width/2, height/2);
+    shipPos = new PVector(width/2, height/2); //starts in center of screen
     shipVel = new PVector();
-    shipDir = new PVector(0, -1);
+    shipDir = new PVector(0, -1); //starts facing upwards
     maxVel = 5;
     shipAcc = 0.1;
     shipScale = 50;
-    ship = createShape(TRIANGLE, shipScale, 0, -shipScale/2, shipScale/2, -shipScale/2, -shipScale/2);
+    ship = createShape(TRIANGLE, shipScale, 0,
+    				   -shipScale/2, shipScale/2,
+    				   -shipScale/2, -shipScale/2);
     ship.rotate(shipDir.heading());
 }
 
@@ -40,7 +42,7 @@ void draw() {
 }
 
 void keyPressed() {
-    getKey(keyCode);
+    getKey(key);
 }
 
 void keyReleased() {
@@ -50,32 +52,38 @@ void keyReleased() {
 //functions
 
 void getKey(int k) {
+	/*
+	handles and sorts key input
+	*/
     if (k == 'w' || k == 'W') {
-        forward = true;
+        inForward = true;
     }
     if (k == 's' || k == 'S') {
-        reverse = true;
+        inReverse = true;
     }
     if (k == 'a' || k == 'A') {
-        left = true;
+        inLeft = true;
     }
     if (k == 'd' || k == 'D') {
-        right = true;
+        inRight = true;
     }
 }
 
 void dropKey(int k) {
+	/*
+	switches off key inputs
+	*/
     if (k == 'w' || k == 'W') {
-        forward = false;
+        inForward = false;
     }
     if (k == 's' || k == 'S') {
-        reverse = false;
+        inReverse = false;
     }
     if (k == 'a' || k == 'A') {
-        left = false;
+        inLeft = false;
     }
     if (k == 'd' || k == 'D') {
-        right = false;
+        inRight = false;
     }
 }
 
@@ -86,30 +94,30 @@ void ship() {
         - rotation/orientation
         - collision
         - screen wrapping
-        - firing projectiles
     */
     moveShip();
     drawShip();
 }
 
 void moveShip() {
-    if (forward) {
+	/*
+	handles ship movement, rotation/orientation and screen wrapping
+	*/
+    if (inForward) {
         shipDir.normalize();
         shipDir.mult(shipAcc);
         shipVel.add(shipDir);
-    } else if (reverse) {
+    } else if (inReverse) {
         shipDir.normalize();
         shipDir.mult(-1 * shipAcc);
         shipVel.add(shipDir);
         shipDir.mult(-1); //reset ship's direction after reversing
     }
-    if (left) {
+    if (inLeft) {
         shipDir.rotate(-0.1);
-        ship.rotate(-0.1);
     }
-    if (right) {
+    if (inRight) {
         shipDir.rotate(0.1);
-        ship.rotate(0.1);
     }
     shipVel.limit(maxVel);
     shipPos.add(shipVel);
@@ -123,6 +131,9 @@ void moveShip() {
 }
 
 void shipWrap() {
+	/*
+	handles ship screen wrapping
+	*/
     if (shipPos.x < 0) {
         shipPos.x = width;
     } else if (shipPos.x > width) {
@@ -135,7 +146,16 @@ void shipWrap() {
 }
 
 void drawShip() {
+	/*
+	draws the ship
+	*/
     shape(ship, shipPos.x, shipPos.y);
+    if (inLeft) {
+    	ship.rotate(-0.1);
+    }
+    if (inRight) {
+    	ship.rotate(0.1);
+    }
 }
 
 void shots() {
