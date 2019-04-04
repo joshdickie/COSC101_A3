@@ -21,10 +21,11 @@ void setup() {
     shipDir = new PVector(0, -1); //starts facing upwards
     maxVel = 5;
     shipAcc = 0.1;
+    shipDrag = 0.99;
     shipScale = 50;
     ship = createShape(TRIANGLE, shipScale, 0,
-    				   -shipScale/2, shipScale/2,
-    				   -shipScale/2, -shipScale/2);
+                                -shipScale/2, shipScale/2,
+                                -shipScale/2, -shipScale/2);
     ship.rotate(shipDir.heading());
 }
 
@@ -52,9 +53,9 @@ void keyReleased() {
 //functions
 
 void getKey(int k) {
-	/*
-	handles and sorts key input
-	*/
+    /*
+    handles and sorts key input
+    */
     if (k == 'w' || k == 'W') {
         inForward = true;
     }
@@ -70,9 +71,9 @@ void getKey(int k) {
 }
 
 void dropKey(int k) {
-	/*
-	switches off key inputs
-	*/
+    /*
+    switches off key inputs
+    */
     if (k == 'w' || k == 'W') {
         inForward = false;
     }
@@ -100,27 +101,29 @@ void ship() {
 }
 
 void moveShip() {
-	/*
-	handles ship movement, rotation/orientation and screen wrapping
-	*/
-    if (inForward) {
+    /*
+    handles ship movement, rotation/orientation and screen wrapping
+    */
+    if (inForward) { //forward movement
         shipDir.normalize();
         shipDir.mult(shipAcc);
         shipVel.add(shipDir);
-    } else if (inReverse) {
+    } else if (inReverse) { //reverse movement
         shipDir.normalize();
         shipDir.mult(-1 * shipAcc);
         shipVel.add(shipDir);
         shipDir.mult(-1); //reset ship's direction after reversing
     }
-    if (inLeft) {
+    if (inLeft) { //left turn
         shipDir.rotate(-0.1);
     }
-    if (inRight) {
+    if (inRight) {// right turn
         shipDir.rotate(0.1);
     }
     shipVel.limit(maxVel);
     shipPos.add(shipVel);
+    shipVel.mult(shipDrag);
+
     if (shipPos.x < 0 ||
         shipPos.x > width ||
         shipPos.y < 0 ||
@@ -131,9 +134,9 @@ void moveShip() {
 }
 
 void shipWrap() {
-	/*
-	handles ship screen wrapping
-	*/
+    /*
+    handles ship screen wrapping
+    */
     if (shipPos.x < 0) {
         shipPos.x = width;
     } else if (shipPos.x > width) {
@@ -146,15 +149,15 @@ void shipWrap() {
 }
 
 void drawShip() {
-	/*
-	draws the ship
-	*/
+    /*
+    draws the ship
+    */
     shape(ship, shipPos.x, shipPos.y);
     if (inLeft) {
-    	ship.rotate(-0.1);
+        ship.rotate(-0.1);
     }
     if (inRight) {
-    	ship.rotate(0.1);
+        ship.rotate(0.1);
     }
 }
 
