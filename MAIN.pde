@@ -136,10 +136,10 @@ void moveShip() {
     shipPos.add(shipVel);
     shipVel.mult(shipDrag);
 
-    if (shipPos.x < 0 ||
-        shipPos.x > width ||
-        shipPos.y < 0 ||
-        shipPos.y > height) {
+    if (shipPos.x + shipScale < 0 ||
+        shipPos.x - shipScale > width ||
+        shipPos.y + shipScale < 0 ||
+        shipPos.y - shipScale > height) {
             shipWrap();
     }
 }
@@ -149,13 +149,13 @@ void shipWrap() {
     handles ship screen wrapping
     */
     if (shipPos.x < 0) {
-        shipPos.x = width;
+        shipPos.x = width + shipScale;
     } else if (shipPos.x > width) {
-        shipPos.x = 0;
+        shipPos.x = 0 - shipScale;
     } else if (shipPos.y < 0) {
-        shipPos.y = height;
+        shipPos.y = height + shipScale;
     } else {
-        shipPos.y = 0;
+        shipPos.y = 0 - shipScale;
     }
 }
 
