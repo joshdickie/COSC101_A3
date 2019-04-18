@@ -1,5 +1,9 @@
 /******************************************************************************
-
+changes made on plane:
+		added shotWrap() and shotErase() functions
+		added collisionCheck() function
+		wrote and tested shotWrap() and shotErase() functions
+		added moveAsteroids() and drawAsteroids() functions
 ******************************************************************************/
 
 //declare variables
@@ -7,7 +11,8 @@ boolean gameOver, pause;
 boolean inForward, inReverse, inLeft, inRight, inSpacebar; //inputs
 PVector shipPos, shipVel, shipDir;
 PVector[] shotPos, shotVel;
-float maxVel, shipAcc, shipDrag, shipScale, shotSpeed;
+float maxVel, shipAcc, shipDrag, shipScale, shotSpeed, shotLife;
+float[] shotTime;
 PShape ship;
 
 void setup() {
@@ -22,7 +27,9 @@ void setup() {
     shipDir = new PVector(0, -1); //starts facing upwards
     shotPos = new PVector[0];
     shotVel = new PVector[0];
+    shotTime = new float[0];
     shotSpeed = 30;
+    shotLife = 1000; //lifespan of a friendly shot
     maxVel = 20;
     shipAcc = 0.5;
     shipDrag = 0.99;
@@ -184,17 +191,22 @@ void shots() {
         shotPos[i].add(shotVel[i]);
         point(shotPos[i].x, shotPos[i].y);
     }
-    //erase shots once they leave the screen
-    //new loop to ensure that every shot is drawn before we mess with the array
+
+    //wrap shots around screen
     for (int i = 0; i < shotPos.length; i++) {
-        if (shotPos[i].x < 0 ||
-            shotPos[i].x > width ||
-            shotPos[i].y < 0 ||
-            shotPos[i].y > height) {
-                shotPos[i] = shotPos[shotPos.length - 1];
-                shotPos = (PVector[])shorten(shotPos);
-                shotVel[i] = shotVel[shotVel.length - 1];
-                shotVel = (PVector[])shorten(shotVel);
+    	if (shotPos[i].x < 0 ||
+    		shotPos[i].x > width ||
+    		shotPos[i].y < 0 ||
+    		shotPos[i].y > height) {
+    			shotWrap(i);
+    	}
+    }
+
+    //erase shots once they reach their lifespan.
+    //Loop is a bit superfluous, but it's good to be rock solid
+    for (int i = 0; i < shotPos.length; i++) {
+        if (millis() - shotTime[i] > shotLife) {
+        	shotErase(i);
         }
     }
 }
@@ -204,7 +216,7 @@ void fire() {
     fires a new shot
     copies need to be used here - append() method appears to affect original vector.
     */
-    if (!inSpacebar) {
+    if (!inSpacebar) { //only one shot per keypress
         PVector newPos = new PVector();
         newPos = shipPos.copy();
         shotPos = (PVector[])append(shotPos, newPos);
@@ -214,16 +226,72 @@ void fire() {
         newVel.mult(shotSpeed);
         newVel.add(shipVel); //adding ship's velocity appears more natural
         shotVel = (PVector[])append(shotVel, newVel);
+
+        //note the shot's time of birth
+        shotTime = append(shotTime, millis());
     }
 }
 
-void asteroids() {
+void shotWrap(int i) {
+	/*
+	handles shot wrapping
+
+	args: i - the index of the shot to be wrapped
+	*/
+    if (shotPos[i].x < 0) {
+        shotPos[i].x = width;
+    } else if (shotPos[i].x > width) {
+        shotPos[i].x = 0;
+    } else if (shotPos[i].y < 0) {
+        shotPos[i].y = height;
+    } else {
+        shotPos[i].y = 0;
+    }
+
+}
+
+void shotErase(int i) {
+	/*
+	erases shots that have surpassed their lifespan
+
+	args: i - the index of the shot to be erased
+	*/
+	shotPos[i] = shotPos[shotPos.length - 1];
+	shotPos = (PVector[])shorten(shotPos);
+	shotVel[i] = shotVel[shotVel.length - 1];
+	shotVel = (PVector[])shorten(shotVel);
+	shotTime[i] = shotTime[shotTime.length - 1];
+	shotTime = shorten(shotTime);
+}
+
+void Asteroids() {
     /*
     handles asteroid behaviour, including:
         - movement
         - collision
         - screen wrapping
     */
+    moveAsteroids();
+    drawAsteroids();
+}
+
+void moveAsteroids() {
+	/*
+	handles asteroid movement
+	*/
+}
+
+void drawAsteroids() {
+	/*
+	draws asteroids to the screen
+	*/
+}
+
+void collisionCheck() {
+	/*
+	checks for and handles collision of all kinds
+	calls the appropriate function when collision is detected
+	*/
 }
 
 void pickups() {
