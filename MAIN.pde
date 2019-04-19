@@ -1,10 +1,5 @@
 /******************************************************************************
-changes made on plane:
-    added shotWrap() and shotErase() functions
-    added collisionCheck() function
-    wrote and tested shotWrap() and shotErase() functions
-    added moveAsteroids() and drawAsteroids() functions
-    asteroid wrapping
+
 ******************************************************************************/
 
 //declare variables
@@ -52,11 +47,12 @@ void setup() {
                                 -shipScale/2, -shipScale/2);
     ship.rotate(shipDir.heading());
     asteroid = createShape(ELLIPSE, 0, 0, 1, 1); //unit circle, scaled later
-
-    newRound = true;
 }
 
 void draw() {
+	if (astroPos.length < 1) {
+		startRound();
+	}
 	if (newRound) {
 		setAsteroids();
 	}
@@ -124,6 +120,14 @@ void dropKey(int k) {
     if (k == ' ') {
         inSpacebar = false;
     }
+}
+
+void startRound() {
+	/*
+	counts down to the start of a new round. Maybe plays music?
+	TODO
+	*/
+	newRound = true;
 }
 
 void ship() {
@@ -233,7 +237,7 @@ void shots() {
 void fire() {
     /*
     fires a new shot
-    copies need to be used here - append() method appears to affect original vector.
+    copies need to be used here - append() affects original vector
     */
     if (!inSpacebar) { //only one shot per keypress
         PVector newPos = new PVector();
