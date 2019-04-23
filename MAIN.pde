@@ -1,7 +1,7 @@
 /******************************************************************************
 
 ******************************************************************************/
-//James was here
+//Linda was here
 //declare variables
 boolean gameOver, pause, newRound;
 boolean inForward, inReverse, inLeft, inRight, inSpacebar; //inputs
