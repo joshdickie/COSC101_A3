@@ -14,6 +14,16 @@ int round;
 float[] shotTime, astroSize;
 PShape ship, asteroid;
 
+//James' stuff
+int asteroidNum = 1;
+int asteroidPoint = 12;
+float[][] xArray = new float[asteroidNum][asteroidPoint];
+float[][] yArray = new float[asteroidNum][asteroidPoint];
+float[][] randArray = new float[asteroidNum][asteroidPoint];
+int randangle;
+int radius;
+boolean newGeneration;
+
 void setup() {
     fullScreen();
     noCursor();
@@ -47,14 +57,21 @@ void setup() {
                                 -shipScale/2, -shipScale/2);
     ship.rotate(shipDir.heading());
     asteroid = createShape(ELLIPSE, 0, 0, 1, 1); //unit circle, scaled later
+    
+    asteroidNum = 1;
+    asteroidPoint = 12;
+    radius=100;
+    newGeneration = true;
+    
 }
+
 
 void draw() {
 	if (astroPos.length < 1) {
 		startRound();
 	}
 	if (newRound) {
-		setAsteroids();
+    setAsteroids();
 	}
     background(0);
     if (pause) {
@@ -67,6 +84,7 @@ void draw() {
         pickups();
     }
     hud();
+    
 }
 
 void keyPressed() {
@@ -302,7 +320,21 @@ void setAsteroids () {
 		astroSize = append(astroSize, sizeLarge);
 
 		newRound = false;
-	}
+}
+
+/*
+James: used to generate a set of random numbers unique to each asteroid.
+uses boolean newGeneration so it only occurs once a round.
+*/
+  if (newGeneration) {
+    for (int i = 0; i < asteroidNum; i++) {
+      for (int j = 0; j < asteroidPoint; j++) {
+        randangle = (int) random(30*j-30, j*30);
+        randArray[i][j] = randangle; 
+      }
+    }
+    newGeneration = false;
+  }
 }
 
 void asteroids() {
@@ -339,12 +371,48 @@ void drawAsteroids() {
   /*
   draws asteroids to the screen
   */
+  
   stroke(255);
   fill(255);
   strokeWeight(4);
+//  for (int i = 0; i < astroPos.length; i++) {
+//  	ellipse(astroPos[i].x, astroPos[i].y, astroSize[i], astroSize[i]);
+//    println(xArray[i][i]);
+//}
+
+
+  generateAsteroids();
   for (int i = 0; i < astroPos.length; i++) {
-  	ellipse(astroPos[i].x, astroPos[i].y, astroSize[i], astroSize[i]);
+      beginShape();
+      vertex(xArray[i][0], yArray[i][0]);
+      vertex(xArray[i][1], yArray[i][1]);
+      vertex(xArray[i][2], yArray[i][2]);
+      vertex(xArray[i][3], yArray[i][3]);
+      vertex(xArray[i][4], yArray[i][4]);
+      vertex(xArray[i][5], yArray[i][5]);
+      vertex(xArray[i][6], yArray[i][6]);
+      vertex(xArray[i][7], yArray[i][7]);
+      vertex(xArray[i][8], yArray[i][8]);
+      vertex(xArray[i][9], yArray[i][9]);
+      vertex(xArray[i][10], yArray[i][10]);
+      vertex(xArray[i][11], yArray[i][11]);
+      endShape(CLOSE);
+      }
+}
+
+void generateAsteroids() {
+   /*
+   Generates the points for the randomly generated asteroids.
+   
+   */
+   for (int i = 0; i < astroPos.length; i++) {
+      for (int j = 0; j < asteroidPoint; j++) {
+        
+    xArray[i][j] = astroPos[i].x + int(cos(radians(randArray[i][j])) * radius);
+    yArray[i][j] = astroPos[i].y + int(sin(radians(randArray[i][j])) * radius);
+      }
   }
+  
 }
 
 void astroWrap(int i) {
@@ -352,14 +420,17 @@ void astroWrap(int i) {
 	handles asteroid wrapping
 	args: i - the index of the astroid being wrapped
 	*/
+
+// James: changes the astrosize to radius for testing. we will need 
+// a radius array when we start adding multple asteroids
     if (astroPos[i].x < 0) {
-        astroPos[i].x = width + astroSize[i];
+        astroPos[i].x = width + radius; 
     } else if (astroPos[i].x > width) {
-        astroPos[i].x = 0 - astroSize[i];
+        astroPos[i].x = 0 - radius;
     } else if (astroPos[i].y < 0) {
-        astroPos[i].y = height + astroSize[i];
+        astroPos[i].y = height + radius;
     } else {
-        astroPos[i].y = 0 - astroSize[i];
+        astroPos[i].y = 0 - radius;
     }
 }
 
