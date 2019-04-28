@@ -15,7 +15,10 @@ float[] shotTime, astroSize;
 PShape ship, asteroid;
 
 //James' stuff
-int asteroidNum = 1;
+
+// Note to self: if the screen keeps greying out and you don't know why it probably becuase you didn't
+// define asteroidNum before making xArray, yArray and randArray
+int asteroidNum = 20;
 int asteroidPoint = 12;
 float[][] xArray = new float[asteroidNum][asteroidPoint];
 float[][] yArray = new float[asteroidNum][asteroidPoint];
@@ -31,7 +34,8 @@ void setup() {
     //load images and set parameters based on image sizes
 
     //initialise variables
-    round = 1;
+    asteroidNum = 20;
+    round = 20;
     shipPos = new PVector(width/2, height/2); //starts in center of screen
     shipVel = new PVector();
     shipDir = new PVector(0, -1); //starts facing upwards
@@ -58,7 +62,6 @@ void setup() {
     ship.rotate(shipDir.heading());
     asteroid = createShape(ELLIPSE, 0, 0, 1, 1); //unit circle, scaled later
     
-    asteroidNum = 1;
     asteroidPoint = 12;
     radius=100;
     newGeneration = true;
@@ -310,7 +313,7 @@ void setAsteroids () {
 	sets a new round's worth of asteroids in place at the edges of the screen
 	TODO
 	*/
-	for (int i = 0; i < round; i++) {
+	for (int i = 0; i < asteroidNum; i++) {
 		PVector newPos = new PVector(/*TODO: coin flip for left or right of screen*/ 0, random(height));
 		astroPos = (PVector[])append(astroPos, newPos);
 		PVector newVel = new PVector(random(1), random(1));
@@ -371,15 +374,15 @@ void drawAsteroids() {
   /*
   draws asteroids to the screen
   */
-  
+/*  
   stroke(255);
   fill(255);
   strokeWeight(4);
-//  for (int i = 0; i < astroPos.length; i++) {
-//  	ellipse(astroPos[i].x, astroPos[i].y, astroSize[i], astroSize[i]);
-//    println(xArray[i][i]);
-//}
-
+  for (int i = 0; i < astroPos.length; i++) {
+  	ellipse(astroPos[i].x, astroPos[i].y, astroSize[i], astroSize[i]);
+    
+}}
+*/
 
   generateAsteroids();
   for (int i = 0; i < astroPos.length; i++) {
