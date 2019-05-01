@@ -8,7 +8,7 @@ boolean inForward, inReverse, inLeft, inRight, inSpacebar; //inputs
 PVector shipPos, shipVel, shipDir;
 PVector[] shotPos, shotVel;
 PVector[] astroPos, astroVel;
-float maxShipVel, shipAcc, shipDrag, shipScale, shotSpeed, shotLife;
+float maxShipVel, shipAcc, shipDrag, shipScale, shotSpeed, shotLife, turn;
 float sizeSmall, sizeMid, sizeLarge, minAstroVel, maxAstroVel; //asteroid stuff
 int round;
 float[] shotTime, astroSize;
@@ -26,6 +26,7 @@ float[][] randArray = new float[asteroidNum][asteroidPoint];
 int randangle;
 int radius;
 boolean newGeneration;
+int angleSeed;
 
 void setup() {
     fullScreen();
@@ -53,6 +54,7 @@ void setup() {
     shipAcc = 0.5;
     shipDrag = 0.99;
     shipScale = 50;
+    turn = 0.1; //ship turning speed
     sizeSmall = shipScale/2;
     sizeMid = shipScale;
     sizeLarge = shipScale * 2;
@@ -65,6 +67,7 @@ void setup() {
     asteroidPoint = 12;
     radius=100;
     newGeneration = true;
+    angleSeed = 60;
     
 }
 
@@ -178,10 +181,10 @@ void moveShip() {
         shipDir.mult(-1); //reset ship's direction after reversing
     }
     if (inLeft) { //left turn
-        shipDir.rotate(-0.1);
+        shipDir.rotate(-turn);
     }
     if (inRight) {// right turn
-        shipDir.rotate(0.1);
+        shipDir.rotate(turn);
     }
     shipVel.limit(maxShipVel);
     shipPos.add(shipVel);
@@ -198,12 +201,13 @@ void moveShip() {
 void shipWrap() {
     /*
     handles ship screen wrapping
+    //TODO: leaving screen, not coming back
     */
-    if (shipPos.x < 0) {
+    if (shipPos.x + shipScale < 0) {
         shipPos.x = width + shipScale;
-    } else if (shipPos.x > width) {
+    } else if (shipPos.x - shipScale > width) {
         shipPos.x = 0 - shipScale;
-    } else if (shipPos.y < 0) {
+    } else if (shipPos.y + shipScale < 0) {
         shipPos.y = height + shipScale;
     } else {
         shipPos.y = 0 - shipScale;
@@ -216,10 +220,10 @@ void drawShip() {
     */
     shape(ship, shipPos.x, shipPos.y);
     if (inLeft) {
-        ship.rotate(-0.1);
+        ship.rotate(-turn);
     }
     if (inRight) {
-        ship.rotate(0.1);
+        ship.rotate(turn);
     }
 }
 
@@ -316,7 +320,7 @@ void setAsteroids () {
 	for (int i = 0; i < asteroidNum; i++) {
 		PVector newPos = new PVector(/*TODO: coin flip for left or right of screen*/ 0, random(height));
 		astroPos = (PVector[])append(astroPos, newPos);
-		PVector newVel = new PVector(random(1), random(1));
+		PVector newVel = new PVector(random(-1, 1), random(-1, 1));
 		newVel.normalize();
 		newVel.mult(random(minAstroVel, maxAstroVel));
 		astroVel = (PVector[])append(astroVel, newVel);
@@ -332,7 +336,7 @@ uses boolean newGeneration so it only occurs once a round.
   if (newGeneration) {
     for (int i = 0; i < asteroidNum; i++) {
       for (int j = 0; j < asteroidPoint; j++) {
-        randangle = (int) random(30*j-30, j*30);
+        randangle = (int) random(angleSeed*j-angleSeed, j*angleSeed);
         randArray[i][j] = randangle; 
       }
     }
@@ -374,15 +378,6 @@ void drawAsteroids() {
   /*
   draws asteroids to the screen
   */
-/*  
-  stroke(255);
-  fill(255);
-  strokeWeight(4);
-  for (int i = 0; i < astroPos.length; i++) {
-  	ellipse(astroPos[i].x, astroPos[i].y, astroSize[i], astroSize[i]);
-    
-}}
-*/
 
   generateAsteroids();
   for (int i = 0; i < astroPos.length; i++) {
@@ -442,6 +437,7 @@ void collisionCheck() {
   checks for and handles collision of all kinds
   calls the appropriate function when collision is detected
   */
+
 }
 
 void pickups() {
