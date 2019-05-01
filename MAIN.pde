@@ -327,12 +327,14 @@ void setAsteroids () {
 
 /*
 James: used to generate a set of random numbers unique to each asteroid.
-uses boolean newGeneration so it only occurs once a round.
+uses boolean newGeneration so it only occurs once a round. 360/Asteroid point
+is the arc in a circle where the random angle will be genrated. points will be 
+made off these angles in the generateAsteroid function.
 */
   if (newGeneration) {
     for (int i = 0; i < asteroidNum; i++) {
       for (int j = 0; j < asteroidPoint; j++) {
-        randangle = (int) random(30*j-30, j*30);
+        randangle = (int) random((360/asteroidPoint)*j-(360/asteroidPoint), j*(360/asteroidPoint));
         randArray[i][j] = randangle; 
       }
     }
