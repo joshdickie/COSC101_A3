@@ -1,7 +1,7 @@
 /******************************************************************************
 
 ******************************************************************************/
-//Linda was here
+
 //declare variables
 boolean gameOver, pause, newRound;
 boolean inForward, inReverse, inLeft, inRight, inSpacebar; //inputs
@@ -13,9 +13,6 @@ float sizeSmall, sizeMid, sizeLarge, minAstroVel, maxAstroVel; //asteroid stuff
 int round;
 float[] shotTime, astroSize;
 PShape ship, asteroid;
-
-//James' stuff
-
 // Note to self: if the screen keeps greying out and you don't know why it probably becuase you didn't
 // define asteroidNum before making xArray, yArray and randArray
 int asteroidNum = 20;
