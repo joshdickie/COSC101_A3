@@ -400,7 +400,7 @@ void drawAsteroids() {
   fill(255);
   strokeWeight(4);
   for (int i = 0; i < astroPos.length; i++) {
-  	ellipse(astroPos[i].x, astroPos[i].y, astroSize[i], astroSize[i])
+  	ellipse(astroPos[i].x, astroPos[i].y, astroSize[i], astroSize[i]);
   }
 }
 
