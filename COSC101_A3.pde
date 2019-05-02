@@ -1,6 +1,6 @@
 /******************************************************************************
-
-******************************************************************************/
+ 
+ ******************************************************************************/
 
 //declare variables
 boolean gameOver, pause, newRound;
@@ -10,7 +10,7 @@ PVector[] shotPos, shotVel;
 PVector[] astroPos, astroVel;
 float maxShipVel, shipAcc, shipDrag, shipScale, shotSpeed, shotLife, turn;
 float sizeSmall, sizeMid, sizeLarge, minAstroVel, maxAstroVel; //asteroid stuff
-int round;
+int round, score, splitNum;
 float[] shotTime, astroSize;
 PShape ship, asteroid;
 // Note to self: if the screen keeps greying out and you don't know why it probably becuase you didn't
@@ -32,8 +32,10 @@ void setup() {
     //load images and set parameters based on image sizes
 
     //initialise variables
-    asteroidNum = 20;
-    round = 20;
+    score = 0;
+    splitNum = 2; //number of asteroids that a hit asteroid splits into
+    asteroidNum = 5;
+    round = 1;
     shipPos = new PVector(width/2, height/2); //starts in center of screen
     shipVel = new PVector();
     shipDir = new PVector(0, -1); //starts facing upwards
@@ -46,48 +48,47 @@ void setup() {
     shotSpeed = 30;
     shotLife = 1000; //lifespan of a friendly shot
     minAstroVel = 1;
-    maxAstroVel = 10;
-    maxShipVel = 20;
+    maxAstroVel = 5;
+    maxShipVel = 10;
     shipAcc = 0.5;
     shipDrag = 0.99;
     shipScale = 50;
     turn = 0.1; //ship turning speed
-    sizeSmall = shipScale/2;
-    sizeMid = shipScale;
-    sizeLarge = shipScale * 2;
-    ship = createShape(TRIANGLE, shipScale, 0,
-                                -shipScale/2, shipScale/2,
-                                -shipScale/2, -shipScale/2);
+    sizeSmall = shipScale;
+    sizeMid = shipScale * 2;
+    sizeLarge = shipScale * 4;
+    ship = createShape(TRIANGLE, shipScale, 0, 
+        -shipScale/2, shipScale/2, 
+        -shipScale/2, -shipScale/2);
     ship.rotate(shipDir.heading());
     asteroid = createShape(ELLIPSE, 0, 0, 1, 1); //unit circle, scaled later
-    
+
     asteroidPoint = 12;
     radius=100;
     newGeneration = true;
     angleSeed = 60;
-    
 }
 
 
 void draw() {
-	if (astroPos.length < 1) {
-		startRound();
-	}
-	if (newRound) {
-    setAsteroids();
-	}
+    if (astroPos.length < 1) {
+        startRound();
+    }
+    if (newRound) {
+        setAsteroids();
+    }
     background(0);
     if (pause) {
         pauseMenu();
     }
     if (!gameOver) {
+        collisionCheck();
         shots();
         ship();
         asteroids();
         pickups();
     }
     hud();
-    
 }
 
 void keyPressed() {
@@ -103,7 +104,7 @@ void keyReleased() {
 void getKey(int k) {
     /*
     handles and sorts key input
-    */
+     */
     if (k == 'w' || k == 'W') {
         inForward = true;
     }
@@ -125,7 +126,7 @@ void getKey(int k) {
 void dropKey(int k) {
     /*
     switches off key inputs
-    */
+     */
     if (k == 'w' || k == 'W') {
         inForward = false;
     }
@@ -144,21 +145,21 @@ void dropKey(int k) {
 }
 
 void startRound() {
-	/*
-	counts down to the start of a new round. Maybe plays music?
-	TODO
-	*/
-	newRound = true;
+    /*
+    counts down to the start of a new round. Maybe plays music?
+     TODO
+     */
+    newRound = true;
 }
 
 void ship() {
     /*
     handles ship behaviour, including:
-        - movement
-        - rotation/orientation
-        - collision
-        - screen wrapping
-    */
+     - movement
+     - rotation/orientation
+     - collision
+     - screen wrapping
+     */
     moveShip();
     drawShip();
 }
@@ -166,7 +167,7 @@ void ship() {
 void moveShip() {
     /*
     handles ship movement, rotation/orientation and screen wrapping
-    */
+     */
     if (inForward) { //forward movement
         shipDir.normalize();
         shipDir.mult(shipAcc);
@@ -191,15 +192,15 @@ void moveShip() {
         shipPos.x - shipScale > width ||
         shipPos.y + shipScale < 0 ||
         shipPos.y - shipScale > height) {
-            shipWrap();
+        shipWrap();
     }
 }
 
 void shipWrap() {
     /*
     handles ship screen wrapping
-    //TODO: leaving screen, not coming back
-    */
+     //TODO: leaving screen, not coming back
+     */
     if (shipPos.x + shipScale < 0) {
         shipPos.x = width + shipScale;
     } else if (shipPos.x - shipScale > width) {
@@ -214,7 +215,7 @@ void shipWrap() {
 void drawShip() {
     /*
     draws the ship
-    */
+     */
     shape(ship, shipPos.x, shipPos.y);
     if (inLeft) {
         ship.rotate(-turn);
@@ -227,9 +228,9 @@ void drawShip() {
 void shots() {
     /*
     handles friendly projectile behaviour, including:
-        - movement
-        - collision
-    */
+     - movement
+     - collision
+     */
     stroke(255);
     strokeWeight(4);
     for (int i = 0; i < shotPos.length; i++) {
@@ -239,19 +240,19 @@ void shots() {
 
     //wrap shots around screen
     for (int i = 0; i < shotPos.length; i++) {
-      if (shotPos[i].x < 0 ||
-        shotPos[i].x > width ||
-        shotPos[i].y < 0 ||
-        shotPos[i].y > height) {
-          shotWrap(i);
-      }
+        if (shotPos[i].x < 0 ||
+            shotPos[i].x > width ||
+            shotPos[i].y < 0 ||
+            shotPos[i].y > height) {
+            shotWrap(i);
+        }
     }
 
     //erase shots once they reach their lifespan.
     //Loop is a bit superfluous, but it's good to be rock solid
     for (int i = 0; i < shotPos.length; i++) {
         if (millis() - shotTime[i] > shotLife) {
-          shotErase(i);
+            shotErase(i);
         }
     }
 }
@@ -259,14 +260,13 @@ void shots() {
 void fire() {
     /*
     fires a new shot
-    copies need to be used here - append() affects original vector
-    */
+     copies need to be used here - append() affects original vector
+     */
     if (!inSpacebar) { //only one shot per keypress
-        PVector newPos = new PVector();
-        newPos = shipPos.copy();
+        PVector newPos = shipPos.copy();
         shotPos = (PVector[])append(shotPos, newPos);
-        PVector newVel = new PVector();
         shipDir.normalize();
+        PVector newVel = new PVector();
         newVel = shipDir.copy();
         newVel.mult(shotSpeed);
         newVel.add(shipVel); //adding ship's velocity appears more natural
@@ -278,11 +278,11 @@ void fire() {
 }
 
 void shotWrap(int i) {
-  /*
+    /*
   handles shot wrapping
-
-  args: i - the index of the shot to be wrapped
-  */
+     
+     args: i - the index of the shot to be wrapped
+     */
     if (shotPos[i].x < 0) {
         shotPos[i].x = width;
     } else if (shotPos[i].x > width) {
@@ -292,184 +292,248 @@ void shotWrap(int i) {
     } else {
         shotPos[i].y = 0;
     }
-
 }
 
 void shotErase(int i) {
-  /*
+    /*
   erases shots that have surpassed their lifespan
-
-  args: i - the index of the shot to be erased
-  */
-  shotPos[i] = shotPos[shotPos.length - 1];
-  shotPos = (PVector[])shorten(shotPos);
-  shotVel[i] = shotVel[shotVel.length - 1];
-  shotVel = (PVector[])shorten(shotVel);
-  shotTime[i] = shotTime[shotTime.length - 1];
-  shotTime = shorten(shotTime);
+     
+     args: i - the index of the shot to be erased
+     */
+    println("shotPos");
+    shotPos[i] = shotPos[shotPos.length - 1];
+    shotPos = (PVector[])shorten(shotPos);
+    println("shotVel");
+    shotVel[i] = shotVel[shotVel.length - 1];
+    shotVel = (PVector[])shorten(shotVel);
+    println("shotTime");
+    shotTime[i] = shotTime[shotTime.length - 1];
+    shotTime = shorten(shotTime);
 }
 
 void setAsteroids () {
-	/*
-	sets a new round's worth of asteroids in place at the edges of the screen
-	TODO
-	*/
-	for (int i = 0; i < asteroidNum; i++) {
-		PVector newPos = new PVector(/*TODO: coin flip for left or right of screen*/ 0, random(height));
-		astroPos = (PVector[])append(astroPos, newPos);
-		PVector newVel = new PVector(random(-1, 1), random(-1, 1));
-		newVel.normalize();
-		newVel.mult(random(minAstroVel, maxAstroVel));
-		astroVel = (PVector[])append(astroVel, newVel);
-		astroSize = append(astroSize, sizeLarge);
-
-		newRound = false;
-}
-
-/*
-James: used to generate a set of random numbers unique to each asteroid.
-uses boolean newGeneration so it only occurs once a round.
-*/
-  if (newGeneration) {
+    /*
+    sets a new round's worth of asteroids in place at the edges of the screen
+     TODO
+     */
     for (int i = 0; i < asteroidNum; i++) {
-      for (int j = 0; j < asteroidPoint; j++) {
-        randangle = (int) random(angleSeed*j-angleSeed, j*angleSeed);
-        randArray[i][j] = randangle; 
-      }
+        PVector newPos = new PVector(/*TODO: coin flip for left or right of screen*/ 0, random(height));
+        astroPos = (PVector[])append(astroPos, newPos);
+        PVector newVel = new PVector(random(-1, 1), random(-1, 1));
+        newVel.normalize();
+        newVel.mult(random(minAstroVel, maxAstroVel));
+        astroVel = (PVector[])append(astroVel, newVel);
+        astroSize = append(astroSize, sizeLarge);
+
+        newRound = false;
     }
-    newGeneration = false;
-  }
+
+    /*
+James: used to generate a set of random numbers unique to each asteroid.
+     uses boolean newGeneration so it only occurs once a round.
+     */
+    if (newGeneration) {
+        for (int i = 0; i < asteroidNum; i++) {
+            for (int j = 0; j < asteroidPoint; j++) {
+                randangle = (int) random(angleSeed*j-angleSeed, j*angleSeed);
+                randArray[i][j] = randangle;
+            }
+        }
+        newGeneration = false;
+    }
 }
 
 void asteroids() {
     /*
     handles asteroid behaviour, including:
-        - movement
-        - collision
-        - screen wrapping
-    */
+     - movement
+     - collision
+     - screen wrapping
+     */
     moveAsteroids();
     drawAsteroids();
 }
 
 void moveAsteroids() {
-  /*
+    /*
   handles asteroid movement
-  */
+     */
     for (int i = 0; i < astroPos.length; i++) {
         astroPos[i].add(astroVel[i]);
     }
 
     //wrap astroids around screen
     for (int i = 0; i < astroPos.length; i++) {
-      if (astroPos[i].x + astroSize[i] < 0 ||
-        astroPos[i].x - astroSize[i] > width ||
-        astroPos[i].y + astroSize[i] < 0 ||
-        astroPos[i].y - astroSize[i] > height) {
-          astroWrap(i);
-      }
+        if (astroPos[i].x + astroSize[i] < 0 ||
+            astroPos[i].x - astroSize[i] > width ||
+            astroPos[i].y + astroSize[i] < 0 ||
+            astroPos[i].y - astroSize[i] > height) {
+            astroWrap(i);
+        }
     }
 }
 
 void drawAsteroids() {
-  /*
+    /*
   draws asteroids to the screen
-  */
+     */
 
-  /* NOTE: commented out to test functionality with simple asteroids
-  generateAsteroids();
-  for (int i = 0; i < astroPos.length; i++) {
-      beginShape();
-      vertex(xArray[i][0], yArray[i][0]);
-      vertex(xArray[i][1], yArray[i][1]);
-      vertex(xArray[i][2], yArray[i][2]);
-      vertex(xArray[i][3], yArray[i][3]);
-      vertex(xArray[i][4], yArray[i][4]);
-      vertex(xArray[i][5], yArray[i][5]);
-      vertex(xArray[i][6], yArray[i][6]);
-      vertex(xArray[i][7], yArray[i][7]);
-      vertex(xArray[i][8], yArray[i][8]);
-      vertex(xArray[i][9], yArray[i][9]);
-      vertex(xArray[i][10], yArray[i][10]);
-      vertex(xArray[i][11], yArray[i][11]);
-      endShape(CLOSE);
-      }
-  */
+    /* NOTE: commented out to test functionality with simple asteroids
+     generateAsteroids();
+     for (int i = 0; i < astroPos.length; i++) {
+     beginShape();
+     vertex(xArray[i][0], yArray[i][0]);
+     vertex(xArray[i][1], yArray[i][1]);
+     vertex(xArray[i][2], yArray[i][2]);
+     vertex(xArray[i][3], yArray[i][3]);
+     vertex(xArray[i][4], yArray[i][4]);
+     vertex(xArray[i][5], yArray[i][5]);
+     vertex(xArray[i][6], yArray[i][6]);
+     vertex(xArray[i][7], yArray[i][7]);
+     vertex(xArray[i][8], yArray[i][8]);
+     vertex(xArray[i][9], yArray[i][9]);
+     vertex(xArray[i][10], yArray[i][10]);
+     vertex(xArray[i][11], yArray[i][11]);
+     endShape(CLOSE);
+     }
+     */
 
-  stroke(255);
-  fill(255);
-  strokeWeight(4);
-  for (int i = 0; i < astroPos.length; i++) {
-  	ellipse(astroPos[i].x, astroPos[i].y, astroSize[i], astroSize[i]);
-  }
+    stroke(255);
+    fill(255);
+    strokeWeight(4);
+    for (int i = 0; i < astroPos.length; i++) {
+        ellipse(astroPos[i].x, astroPos[i].y, astroSize[i], astroSize[i]);
+    }
 }
 
 void generateAsteroids() {
-   /*
+    /*
    Generates the points for the randomly generated asteroids.
-   
-   */
-   for (int i = 0; i < astroPos.length; i++) {
-      for (int j = 0; j < asteroidPoint; j++) {
-        
-    xArray[i][j] = astroPos[i].x + int(cos(radians(randArray[i][j])) * radius);
-    yArray[i][j] = astroPos[i].y + int(sin(radians(randArray[i][j])) * radius);
-      }
-  }
-  
+     */
+    for (int i = 0; i < astroPos.length; i++) {
+        for (int j = 0; j < asteroidPoint; j++) {
+
+            xArray[i][j] = astroPos[i].x + int(cos(radians(randArray[i][j])) * radius);
+            yArray[i][j] = astroPos[i].y + int(sin(radians(randArray[i][j])) * radius);
+        }
+    }
 }
 
 void astroWrap(int i) {
-	/*
-	handles asteroid wrapping
-	args: i - the index of the astroid being wrapped
-	*/
+    /*
+    handles asteroid wrapping
+     args: i - the index of the astroid being wrapped
+     */
 
-// James: changes the astrosize to radius for testing. we will need 
-// a radius array when we start adding multple asteroids
-    if (astroPos[i].x < 0) {
-        astroPos[i].x = width + radius; 
-    } else if (astroPos[i].x > width) {
-        astroPos[i].x = 0 - radius;
-    } else if (astroPos[i].y < 0) {
-        astroPos[i].y = height + radius;
+    // James: changes the astrosize to radius for testing. we will need 
+    // a radius array when we start adding multple asteroids
+    if (astroPos[i].x + astroSize[i] < 0) {
+        astroPos[i].x = width + astroSize[i];
+    } else if (astroPos[i].x - astroSize[i] > width) {
+        astroPos[i].x = 0 - astroSize[i];
+    } else if (astroPos[i].y + astroSize[i] < 0) {
+        astroPos[i].y = height + astroSize[i];
     } else {
-        astroPos[i].y = 0 - radius;
+        astroPos[i].y = 0 - astroSize[i];
     }
 }
 
 void collisionCheck() {
-  /*
+    /*
   checks for and handles collision of all kinds
-  calls the appropriate function when collision is detected
-  */
+     calls the appropriate function when collision is detected
+     */
+     int[] hits = new int[0];
+    for (int i = 0; i < shotPos.length; i++) { //BUG: LOOP KEEPS GOING AFTER SHOTERASE
+        for (int j = 0; j < astroPos.length; j++) {
+            println("i = "+i);
+            println("j = "+j);
+            PVector shot = shotPos[i].copy();
+            PVector astro = astroPos[j].copy();
+            if ((shot.sub(astro)).mag() < astroSize[j]) {
+                hits = append(hits, i);
+                astroHit(j);
+            }
+        }
+    }
+    /*
+    TODO: THIS IS A BAND-AID, NOT A SOLUTION
+    */
+    for (int i = 0; i < hits.length; i++) {
+    shotErase(i);
+    }
+}
 
+void astroHit(int i) {
+    /*
+    handles behaviour of an asteroid which has been hit by a shot
+    args: i - the index of the asteroid which has been hit
+    */
+    if (astroSize[i] != sizeSmall) {
+      for (int j = 0; j < splitNum; j++) {
+        astroSplit(i);
+      }
+    }
+    astroErase(i);
+    score += 1;
+}
+
+void astroSplit(int i) {
+  /*
+  spawns two asteroids of a smaller size at the location of a given asteroid
+  args: i - the index of the asteroid which has been hit
+  */
+  PVector pos = astroPos[i].copy();
+  astroPos = (PVector[])append(astroPos, pos);
+  PVector vel = astroVel[i].copy();
+  PVector newVel = PVector.random2D();
+  newVel.mult(random(minAstroVel, maxAstroVel));
+  vel.add(newVel);
+  astroVel = (PVector[])append(astroVel, vel);
+  if (astroSize[i] == sizeLarge) {
+    astroSize = append(astroSize, sizeMid);
+  } else {
+    astroSize = append(astroSize, sizeSmall);
+  }
+}
+
+void astroErase(int i) {
+  /*
+  erases an asteroid that has been hit.
+  TODO: add like a sound or animation or something
+  */
+    astroPos[i] = astroPos[astroPos.length - 1];
+    astroPos = (PVector[])shorten(astroPos);
+    astroVel[i] = astroVel[astroVel.length - 1];
+    astroVel = (PVector[])shorten(astroVel);
+    astroSize[i] = astroSize[astroSize.length - 1];
+    astroSize = shorten(astroSize);
 }
 
 void pickups() {
     /*
     handles pickup behaviour, including:
-        - movement
-        - collision
-    */
+     - movement
+     - collision
+     */
 }
 
 void hud() {
     /*
     handles hud elements, including:
-        - score
-        - hitpoints
-    */
+     - score
+     - hitpoints
+     */
 }
 
 void pauseMenu() {
     /*
     handles pausing, displaying a menu when the game is paused.
-    */
+     */
 }
 
 void startMenu() {
     /*
     displays a start screen upon running the sketch.
-    */
+     */
 }
