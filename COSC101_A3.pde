@@ -376,6 +376,7 @@ void drawAsteroids() {
   draws asteroids to the screen
   */
 
+  /* NOTE: commented out to test functionality with simple asteroids
   generateAsteroids();
   for (int i = 0; i < astroPos.length; i++) {
       beginShape();
@@ -393,6 +394,14 @@ void drawAsteroids() {
       vertex(xArray[i][11], yArray[i][11]);
       endShape(CLOSE);
       }
+  */
+
+  stroke(255);
+  fill(255);
+  strokeWeight(4);
+  for (int i = 0; i < astroPos.length; i++) {
+  	ellipse(astroPos[i].x, astroPos[i].y, astroSize[i], astroSize[i])
+  }
 }
 
 void generateAsteroids() {
