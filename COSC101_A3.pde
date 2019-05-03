@@ -1,7 +1,7 @@
 /******************************************************************************
 	COSC101 ASSIGNMENT 3
 		Joshua Dickie	- 220195992
-		James Batten	- 
+		James Batten	- 220191816
 		Linda Blamey	- 
 
 	This sketch is our group's take on the classic Atari game, Asteroids.
@@ -33,7 +33,7 @@ int round, score;
 PVector shipPos, shipVel, shipDir;
 float shipVelMax, shipAcc, shipDrag, shipScale, shipTurn;
 PShape ship;
-
+boolean shipHit, shipRespawn;
 //shots
 PVector[] shotPos, shotVel;
 float[] shotTime;
@@ -45,7 +45,7 @@ float[] astroSize;
 float astroSizeSmall, astroSizeMid, astroSizeLarge, astroVelMin, astroVelMax;
 int astroSplitNum;
 
-/********************TODO: INTEGRATE RANDOM ASTROID STUFF**********************
+
 // Note to self: if the screen keeps greying out and you don't know why it probably becuase you didn't
 // define asteroidNum before making xArray, yArray and randArray
 int asteroidNum = 20;
@@ -57,7 +57,11 @@ int randangle;
 int radius;
 boolean newGeneration;
 int angleSeed;
-******************************************************************************/
+
+int total_time = 0;
+int time_start = 0;
+int time_lapsed = 0;
+
 
 void setup() {
 	fullScreen();
@@ -83,7 +87,9 @@ void setup() {
 					-shipScale/2, shipScale/2,
 					-shipScale/2, -shipScale/2);
 	ship.rotate(shipDir.heading());
-
+  shipHit = false;
+  shipRespawn = false;
+  
 	//shots
 	shotPos = new PVector[0];
 	shotVel = new PVector[0];
@@ -102,13 +108,13 @@ void setup() {
 	astroVelMax = 5;
 	astroSplitNum = 2; //number of asteroids that a hit asteroid splits into
 
-/********************TODO: INTEGRATE RANDOM ASTROID STUFF**********************
+
 	asteroidNum = 5;
 	asteroidPoint = 12;
 	radius=100;
 	newGeneration = true;
 	angleSeed = 60;
-******************************************************************************/
+
 }
 
 
@@ -124,10 +130,14 @@ void draw() {
 	}
 
 	if (!gameOver) {
-		collisionCheck();
+		
 		shots();
 		ship();
+    if (!shipRespawn) {
+    collisionCheck();
+    }
 		asteroids();
+    
 	}
 }
 
@@ -196,7 +206,9 @@ void ship() {
 	/*
 	handles ship behaviour
 	*/
+  if (!shipRespawn) {
 	moveShip();
+  }
 	drawShip();
 }
 
@@ -358,9 +370,9 @@ void setAsteroids () {
 		newRound = false;
 	}
 
-/********************TODO: INTEGRATE RANDOM ASTROID STUFF**********************
-James: used to generate a set of random numbers unique to each asteroid.
-     uses boolean newGeneration so it only occurs once a round.
+
+//James: used to generate a set of random numbers unique to each asteroid.
+//     uses boolean newGeneration so it only occurs once a round.
      
     if (newGeneration) {
         for (int i = 0; i < asteroidNum; i++) {
@@ -371,7 +383,7 @@ James: used to generate a set of random numbers unique to each asteroid.
         }
         newGeneration = false;
     }
-******************************************************************************/
+
 }
 
 void asteroids() {
@@ -406,7 +418,7 @@ void drawAsteroids() {
 	draws asteroids to the screen
 	*/
 
-/********************TODO: INTEGRATE RANDOM ASTROID STUFF**********************
+
      generateAsteroids();
      for (int i = 0; i < astroPos.length; i++) {
      beginShape();
@@ -424,7 +436,8 @@ void drawAsteroids() {
      vertex(xArray[i][11], yArray[i][11]);
      endShape(CLOSE);
      }
-******************************************************************************/
+}
+/*
 
 	stroke(255);
 	fill(255);
@@ -434,7 +447,7 @@ void drawAsteroids() {
 	}
 }
 
-/********************TODO: INTEGRATE RANDOM ASTROID STUFF**********************
+*/
 void generateAsteroids() {
    
    //Generates the points for the randomly generated asteroids.
@@ -442,12 +455,12 @@ void generateAsteroids() {
     for (int i = 0; i < astroPos.length; i++) {
         for (int j = 0; j < asteroidPoint; j++) {
 
-            xArray[i][j] = astroPos[i].x + int(cos(radians(randArray[i][j])) * radius);
-            yArray[i][j] = astroPos[i].y + int(sin(radians(randArray[i][j])) * radius);
+            xArray[i][j] = astroPos[i].x + int(cos(radians(randArray[i][j])) * astroSize[i]);
+            yArray[i][j] = astroPos[i].y + int(sin(radians(randArray[i][j])) * astroSize[i]);
         }
     }
 }
-******************************************************************************/
+
 
 void astroWrap(int i) {
 	/*
@@ -471,16 +484,32 @@ void collisionCheck() {
 	checks for and handles collision of all kinds
 	calls the appropriate function when collision is detected
 	*/
+  for (int k = 0; k < astroPos.length; k++) {
+    PVector ship = shipPos.copy();
+    PVector astro = astroPos[k].copy();
+    if ((ship.sub(astro)).mag() < astroSize[k]) {
+         //println("Over" + k);
+         shipReset();
+    } else {
+      shipHit = false;
+      //println("NOT OVER");
+    }
+    
 	int[] hits = new int[0];
 	for (int i = 0; i < shotPos.length; i++) {
 		for (int j = 0; j < astroPos.length; j++) {
 			PVector shot = shotPos[i].copy();
-			PVector astro = astroPos[j].copy();
+			//PVector astro = astroPos[j].copy();
+      
+     
 			if ((shot.sub(astro)).mag() < astroSize[j]) {
+        
 				shotErase(i);
 				astroHit(j);
-				break;	//only one collision per frame, otherwise
+      	break;	//only one collision per frame, otherwise
+      }
 						//for loop will go out of bounds
+       
 			}
 		}
 	}
@@ -513,6 +542,10 @@ void astroSplit(int i) {
 	newVel.mult(random(astroVelMin, astroVelMax));	//is added to parent
 	vel.add(newVel);								//velocity
 	astroVel = (PVector[])append(astroVel, vel);
+  /********* TODO ********
+  Add radmonly generated angles for child asteroids
+  They are currently being recycled right now.
+  *************************/
 
 	if (astroSize[i] == astroSizeLarge) {
 		astroSize = append(astroSize, astroSizeMid);
@@ -532,6 +565,18 @@ void astroErase(int i) {
 	astroVel = (PVector[])shorten(astroVel);
 	astroSize[i] = astroSize[astroSize.length - 1];
 	astroSize = shorten(astroSize);
+}
+
+void shipReset() {
+    
+      shipRespawn = true; 
+      /**************** TO DO *******************
+      add timer so ship doesn't move or detects collisions for 
+      2 secs. color effects would also be good.
+      ********************/
+      shipPos.x = width/2;
+      shipPos.y = height/2;
+      shipRespawn = false;
 }
 
 void pickups() {
