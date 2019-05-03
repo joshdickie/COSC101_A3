@@ -1,18 +1,31 @@
 /******************************************************************************
- 
+
  ******************************************************************************/
 
 //declare variables
+
+//system
 boolean gameOver, pause, newRound;
 boolean inForward, inReverse, inLeft, inRight, inSpacebar; //inputs
+int round, score;
+
+//ship
 PVector shipPos, shipVel, shipDir;
+float shipVelMax, shipAcc, shipDrag, shipScale, shipTurn;
+PShape ship;
+
+//shots
 PVector[] shotPos, shotVel;
+float[] shotTime;
+float shotSpeed, shotLife;
+
+//asteroids
 PVector[] astroPos, astroVel;
-float maxShipVel, shipAcc, shipDrag, shipScale, shotSpeed, shotLife, turn;
-float sizeSmall, sizeMid, sizeLarge, minAstroVel, maxAstroVel; //asteroid stuff
-int round, score, splitNum;
-float[] shotTime, astroSize;
-PShape ship, asteroid;
+float[] astroSize;
+float astroSizeSmall, astroSizeMid, astroSizeLarge, astroVelMin, astroVelMax;
+int astroSplitNum;
+
+/********************TODO: INTEGRATE RANDOM ASTROID STUFF**********************
 // Note to self: if the screen keeps greying out and you don't know why it probably becuase you didn't
 // define asteroidNum before making xArray, yArray and randArray
 int asteroidNum = 20;
@@ -24,49 +37,58 @@ int randangle;
 int radius;
 boolean newGeneration;
 int angleSeed;
+******************************************************************************/
 
 void setup() {
-    fullScreen();
-    noCursor();
+	fullScreen();
+	noCursor();
 
-    //load images and set parameters based on image sizes
+	//load images and set parameters based on image sizes
 
-    //initialise variables
-    score = 0;
-    splitNum = 2; //number of asteroids that a hit asteroid splits into
-    asteroidNum = 5;
-    round = 1;
-    shipPos = new PVector(width/2, height/2); //starts in center of screen
-    shipVel = new PVector();
-    shipDir = new PVector(0, -1); //starts facing upwards
-    shotPos = new PVector[0];
-    shotVel = new PVector[0];
-    astroPos = new PVector[0];
-    astroVel = new PVector[0];
-    astroSize = new float[0];
-    shotTime = new float[0];
-    shotSpeed = 30;
-    shotLife = 1000; //lifespan of a friendly shot
-    minAstroVel = 1;
-    maxAstroVel = 5;
-    maxShipVel = 10;
-    shipAcc = 0.5;
-    shipDrag = 0.99;
-    shipScale = 50;
-    turn = 0.1; //ship turning speed
-    sizeSmall = shipScale;
-    sizeMid = shipScale * 2;
-    sizeLarge = shipScale * 4;
-    ship = createShape(TRIANGLE, shipScale, 0, 
-        -shipScale/2, shipScale/2, 
-        -shipScale/2, -shipScale/2);
-    ship.rotate(shipDir.heading());
-    asteroid = createShape(ELLIPSE, 0, 0, 1, 1); //unit circle, scaled later
+	//initialise variables
 
-    asteroidPoint = 12;
-    radius=100;
-    newGeneration = true;
-    angleSeed = 60;
+	//system
+	round = 1;
+
+	//ship
+	shipPos = new PVector(width/2, height/2);
+	shipVel = new PVector();
+	shipDir = new PVector(0, -1); //starts facing upwards
+	shipVelMax = 10;
+	shipAcc = 0.5;
+	shipDrag = 0.99;
+	shipScale = 50;
+	shipTurn = 0.1; //turning speed
+	ship = createShape(TRIANGLE, shipScale, 0,
+					-shipScale/2, shipScale/2,
+					-shipScale/2, -shipScale/2);
+	ship.rotate(shipDir.heading());
+
+	//shots
+	shotPos = new PVector[0];
+	shotVel = new PVector[0];
+	shotTime = new float[0];
+	shotSpeed = 30;
+	shotLife = 1000; //lifespan of a friendly shot
+
+	//asteroids
+	astroPos = new PVector[0];
+	astroVel = new PVector [0];
+	astroSize = new float[0];
+	astroSizeSmall = shipScale;
+	astroSizeMid = shipScale * 2;
+	astroSizeLarge = shipScale * 4;
+	astroVelMin = 1;
+	astroVelMax = 5;
+	astroSplitNum = 2; //number of asteroids that a hit asteroid splits into
+
+/********************TODO: INTEGRATE RANDOM ASTROID STUFF**********************
+	asteroidNum = 5;
+	asteroidPoint = 12;
+	radius=100;
+	newGeneration = true;
+	angleSeed = 60;
+******************************************************************************/
 }
 
 
@@ -179,12 +201,12 @@ void moveShip() {
         shipDir.mult(-1); //reset ship's direction after reversing
     }
     if (inLeft) { //left turn
-        shipDir.rotate(-turn);
+        shipDir.rotate(-shipTurn);
     }
     if (inRight) {// right turn
-        shipDir.rotate(turn);
+        shipDir.rotate(shipTurn);
     }
-    shipVel.limit(maxShipVel);
+    shipVel.limit(shipVelMax);
     shipPos.add(shipVel);
     shipVel.mult(shipDrag);
 
@@ -218,10 +240,10 @@ void drawShip() {
      */
     shape(ship, shipPos.x, shipPos.y);
     if (inLeft) {
-        ship.rotate(-turn);
+        ship.rotate(-shipTurn);
     }
     if (inRight) {
-        ship.rotate(turn);
+        ship.rotate(shipTurn);
     }
 }
 
@@ -300,13 +322,10 @@ void shotErase(int i) {
      
      args: i - the index of the shot to be erased
      */
-    println("shotPos");
     shotPos[i] = shotPos[shotPos.length - 1];
     shotPos = (PVector[])shorten(shotPos);
-    println("shotVel");
     shotVel[i] = shotVel[shotVel.length - 1];
     shotVel = (PVector[])shorten(shotVel);
-    println("shotTime");
     shotTime[i] = shotTime[shotTime.length - 1];
     shotTime = shorten(shotTime);
 }
@@ -316,22 +335,22 @@ void setAsteroids () {
     sets a new round's worth of asteroids in place at the edges of the screen
      TODO
      */
-    for (int i = 0; i < asteroidNum; i++) {
+    for (int i = 0; i < round; i++) {
         PVector newPos = new PVector(/*TODO: coin flip for left or right of screen*/ 0, random(height));
         astroPos = (PVector[])append(astroPos, newPos);
         PVector newVel = new PVector(random(-1, 1), random(-1, 1));
         newVel.normalize();
-        newVel.mult(random(minAstroVel, maxAstroVel));
+        newVel.mult(random(astroVelMin, astroVelMax));
         astroVel = (PVector[])append(astroVel, newVel);
-        astroSize = append(astroSize, sizeLarge);
+        astroSize = append(astroSize, astroSizeLarge);
 
         newRound = false;
     }
 
-    /*
+/********************TODO: INTEGRATE RANDOM ASTROID STUFF**********************
 James: used to generate a set of random numbers unique to each asteroid.
      uses boolean newGeneration so it only occurs once a round.
-     */
+     
     if (newGeneration) {
         for (int i = 0; i < asteroidNum; i++) {
             for (int j = 0; j < asteroidPoint; j++) {
@@ -341,6 +360,7 @@ James: used to generate a set of random numbers unique to each asteroid.
         }
         newGeneration = false;
     }
+******************************************************************************/
 }
 
 void asteroids() {
@@ -378,7 +398,7 @@ void drawAsteroids() {
   draws asteroids to the screen
      */
 
-    /* NOTE: commented out to test functionality with simple asteroids
+/********************TODO: INTEGRATE RANDOM ASTROID STUFF**********************
      generateAsteroids();
      for (int i = 0; i < astroPos.length; i++) {
      beginShape();
@@ -396,7 +416,7 @@ void drawAsteroids() {
      vertex(xArray[i][11], yArray[i][11]);
      endShape(CLOSE);
      }
-     */
+******************************************************************************/
 
     stroke(255);
     fill(255);
@@ -406,10 +426,11 @@ void drawAsteroids() {
     }
 }
 
+/********************TODO: INTEGRATE RANDOM ASTROID STUFF**********************
 void generateAsteroids() {
-    /*
-   Generates the points for the randomly generated asteroids.
-     */
+   
+   //Generates the points for the randomly generated asteroids.
+
     for (int i = 0; i < astroPos.length; i++) {
         for (int j = 0; j < asteroidPoint; j++) {
 
@@ -418,6 +439,7 @@ void generateAsteroids() {
         }
     }
 }
+******************************************************************************/
 
 void astroWrap(int i) {
     /*
@@ -446,8 +468,6 @@ void collisionCheck() {
      int[] hits = new int[0];
     for (int i = 0; i < shotPos.length; i++) { //BUG: LOOP KEEPS GOING AFTER SHOTERASE
         for (int j = 0; j < astroPos.length; j++) {
-            println("i = "+i);
-            println("j = "+j);
             PVector shot = shotPos[i].copy();
             PVector astro = astroPos[j].copy();
             if ((shot.sub(astro)).mag() < astroSize[j]) {
@@ -469,8 +489,8 @@ void astroHit(int i) {
     handles behaviour of an asteroid which has been hit by a shot
     args: i - the index of the asteroid which has been hit
     */
-    if (astroSize[i] != sizeSmall) {
-      for (int j = 0; j < splitNum; j++) {
+    if (astroSize[i] != astroSizeSmall) {
+      for (int j = 0; j < astroSplitNum; j++) {
         astroSplit(i);
       }
     }
@@ -487,13 +507,13 @@ void astroSplit(int i) {
   astroPos = (PVector[])append(astroPos, pos);
   PVector vel = astroVel[i].copy();
   PVector newVel = PVector.random2D();
-  newVel.mult(random(minAstroVel, maxAstroVel));
+  newVel.mult(random(astroVelMin, astroVelMax));
   vel.add(newVel);
   astroVel = (PVector[])append(astroVel, vel);
-  if (astroSize[i] == sizeLarge) {
-    astroSize = append(astroSize, sizeMid);
+  if (astroSize[i] == astroSizeLarge) {
+    astroSize = append(astroSize, astroSizeMid);
   } else {
-    astroSize = append(astroSize, sizeSmall);
+    astroSize = append(astroSize, astroSizeSmall);
   }
 }
 
