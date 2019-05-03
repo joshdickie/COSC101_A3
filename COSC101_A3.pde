@@ -1,5 +1,24 @@
 /******************************************************************************
+	COSC101 ASSIGNMENT 3
+		Joshua Dickie	- 220195992
+		James Batten	- 
+		Linda Blamey	- 
 
+	This sketch is our group's take on the classic Atari game, Asteroids.
+	The aim of the player is to earn points by destroying asteroids, while
+	avoiding being hit by them.
+
+	In order to run this sketch, ensure that the sketch's folder contains the
+	following files:
+					- blah.png
+					- blah_blah.mp3
+					- whatever.ttf
+
+	Changelog:
+		wrote header text, cleaned up program commenting, format, etc. (Josh)
+
+		Last Updated: 04/04/2019
+		Processing Version: 3.5.3
  ******************************************************************************/
 
 //declare variables
