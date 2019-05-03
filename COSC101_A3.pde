@@ -16,6 +16,7 @@
 
 	Changelog:
 		wrote header text, cleaned up program commenting, format, etc. (Josh)
+    made asteroids spawn on both sides of the screen (Josh)
 
 		Last Updated: 04/04/2019
 		Processing Version: 3.5.3
@@ -346,7 +347,7 @@ void setAsteroids () {
 	sets a new round's worth of asteroids in place at the edges of the screen
 	*/
 	for (int i = 0; i < round; i++) {
-		PVector newPos = new PVector(/*TODO: coin flip for left or right of screen*/ 0, random(height));
+		PVector newPos = new PVector((random(1)>0.5 ? 0:width), random(height));
 		astroPos = (PVector[])append(astroPos, newPos);
 		PVector newVel = new PVector(random(-1, 1), random(-1, 1));
 		newVel.normalize();
