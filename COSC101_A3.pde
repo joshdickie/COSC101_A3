@@ -347,6 +347,7 @@ void setAsteroids () {
 	sets a new round's worth of asteroids in place at the edges of the screen
 	*/
 	for (int i = 0; i < round; i++) {
+    //asteroids are set at a random height, on either the right or left side
 		PVector newPos = new PVector((random(1)>0.5 ? 0:width), random(height));
 		astroPos = (PVector[])append(astroPos, newPos);
 		PVector newVel = new PVector(random(-1, 1), random(-1, 1));
