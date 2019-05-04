@@ -500,7 +500,7 @@ void collisionCheck() {
 	for (int i = 0; i < shotPos.length; i++) {
 		for (int j = 0; j < astroPos.length; j++) {
 			PVector shot = shotPos[i].copy();
-			//PVector astro = astroPos[j].copy();
+			astro = astroPos[j].copy();
       
      
 			if ((shot.sub(astro)).mag() < astroSize[j]) {
