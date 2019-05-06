@@ -20,7 +20,7 @@
 
 		Last Updated: 04/04/2019
 		Processing Version: 3.5.3
- ******************************************************************************/
+******************************************************************************/
 
 //declare variables
 
@@ -485,6 +485,7 @@ void collisionCheck() {
 	checks for and handles collision of all kinds
 	calls the appropriate function when collision is detected
 	*/
+  //TODO: FORMATTING, loop containing more than it should
   for (int k = 0; k < astroPos.length; k++) {
     PVector ship = shipPos.copy();
     PVector astro = astroPos[k].copy();
@@ -504,15 +505,12 @@ void collisionCheck() {
       
      
 			if ((shot.sub(astro)).mag() < astroSize[j]) {
-        
 				shotErase(i);
 				astroHit(j);
-      	break;	//only one collision per frame, otherwise
+      	break; //only one collision per frame, or loop goes out of bounds
       }
-						//for loop will go out of bounds
-       
-			}
 		}
+	}
 	}
 }
 
@@ -539,9 +537,10 @@ void astroSplit(int i) {
 	astroPos = (PVector[])append(astroPos, pos);
 
 	PVector vel = astroVel[i].copy();
-	PVector newVel = PVector.random2D();			//random child velocity
-	newVel.mult(random(astroVelMin, astroVelMax));	//is added to parent
-	vel.add(newVel);								//velocity
+  //random child velocity is added to parent velocity
+	PVector newVel = PVector.random2D();
+	newVel.mult(random(astroVelMin, astroVelMax));
+	vel.add(newVel);
 	astroVel = (PVector[])append(astroVel, vel);
   /********* TODO ********
   Add radmonly generated angles for child asteroids
