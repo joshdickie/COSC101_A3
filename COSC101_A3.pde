@@ -2,7 +2,7 @@
 	COSC101 ASSIGNMENT 3
 		Joshua Dickie	- 220195992
 		James Batten	- 220191816
-		Linda Blamey	- 
+		Linda Blamey	- 220164366
 
 	This sketch is our group's take on the classic Atari game, Asteroids.
 	The aim of the player is to earn points by destroying asteroids, while
