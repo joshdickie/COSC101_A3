@@ -17,8 +17,10 @@
 	Changelog:
 		wrote header text, cleaned up program commenting, format, etc. (Josh)
     made asteroids spawn on both sides of the screen (Josh)
-
-		Last Updated: 04/04/2019
+    Added score in top left hand corner and added font to make it look 'oldschool' (Linda)
+    font should be uploaded into data of sketch (Linda)
+    
+		Last Updated: 11/05/2019
 		Processing Version: 3.5.3
 ******************************************************************************/
 
@@ -28,6 +30,7 @@
 boolean gameOver, pause, newRound;
 boolean inForward, inReverse, inLeft, inRight, inSpacebar; //inputs
 int round, score;
+PFont font;
 
 //ship
 PVector shipPos, shipVel, shipDir;
@@ -66,6 +69,7 @@ int time_lapsed = 0;
 void setup() {
 	fullScreen();
 	noCursor();
+  font = loadFont("OCRAExtended-30.vlw");
 
 	//load images and set parameters based on image sizes
 
@@ -120,6 +124,9 @@ void setup() {
 
 void draw() {
 	background(0);
+  textFont(font, 30);
+  text (score, 100,100);
+
 
 	if (astroPos.length < 1) {
 		startRound();
