@@ -19,6 +19,8 @@
     made asteroids spawn on both sides of the screen (Josh)
     Added score in top left hand corner and added font to make it look 'oldschool' (Linda)
     font should be uploaded into data of sketch (Linda)
+    Added lives but this needs to be worked on - would prefer 3 triangles than a number (Linda)
+    Also currently allows number to go into negative as opposed to GameOver at 0 as has not yet been worked on (Linda)
     
 		Last Updated: 11/05/2019
 		Processing Version: 3.5.3
@@ -29,7 +31,7 @@
 //system
 boolean gameOver, pause, newRound;
 boolean inForward, inReverse, inLeft, inRight, inSpacebar; //inputs
-int round, score;
+int round, score, lives;
 PFont font;
 
 //ship
@@ -77,6 +79,7 @@ void setup() {
 
 	//system
 	round = 1;
+  lives = 3;
 
 	//ship
 	shipPos = new PVector(width/2, height/2);
@@ -126,6 +129,8 @@ void draw() {
 	background(0);
   textFont(font, 30);
   text (score, 100,100);
+  text ("lives", 45, 150);
+  text (lives, 150,150);
 
 
 	if (astroPos.length < 1) {
@@ -584,6 +589,7 @@ void shipReset() {
       shipPos.x = width/2;
       shipPos.y = height/2;
       shipRespawn = false;
+      lives--;
 }
 
 void pickups() {
@@ -596,6 +602,8 @@ void hud() {
 	/*
 	handles hud elements.
 	*/
+ text ("lives", 45, 150);
+ text (lives, 150,150);
 }
 
 void pauseMenu() {
