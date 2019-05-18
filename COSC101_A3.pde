@@ -53,9 +53,11 @@ int ufoscale;
 PShape ufo_shape;
 PVector ufoPos, ufoVel;
 int initial_y;
-int eventchance = 0;
+int eventchance;
 boolean ufo_event;
-
+int ufo_radius;
+int ufo_rand_limit;
+int ufo_max_limit;
 
 /*********************************************************/
 
@@ -125,6 +127,10 @@ void setup() {
   ufoPos = new PVector(0, initial_y);
   ufoVel = new PVector(2.5, 2.5);
   ufo_event = false; 
+  ufo_rand_limit = 500; //  random number added to num of frames to spawn ufo
+  ufo_max_limit =  1000; // number of frames until ufo spawns
+  ufo_radius = 50;
+  eventchance=0; // counter for frames. used to determine if events occur
 
 	/*******************************************************/
 }
@@ -450,6 +456,14 @@ void shipCollision() {
 			shipHit();
 		}
 	}
+  /* 
+  Checks to see if ship collides with ufo
+  */
+  PVector ship = shipPos.copy();
+  PVector ufo = ufoPos.copy();
+  if ((ship.sub(ufo)).mag() <= ufo_radius) {
+      shipHit();
+  }
 }
 
 void shipHit() {
@@ -732,7 +746,7 @@ void ufo() {
   
 void events() {
   eventchance+=1;
-  if (eventchance + random(0, 500) > 1000 && ufo_event == false) {
+  if (eventchance + random(0, ufo_rand_limit) > ufo_max_limit && ufo_event == false) {
     ufo_event = true;
     initial_y = int(random(100, height-100));
     ufoPos.y = initial_y;
