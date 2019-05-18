@@ -1,5 +1,3 @@
-//ORIGINAL, ROUND ASTEROIDS
-
 /******************************************************************************
 	COSC101 ASSIGNMENT 3
 		Joshua Dickie	- 220195992
@@ -48,16 +46,12 @@ float astroSizeSmall, astroSizeMid, astroSizeLarge, astroVelMin, astroVelMax;
 int astroNumInitial, astroSplitNum;
 
 //ufo
-
-int ufoscale;
-PShape ufo_shape;
+int ufoScale, ufoStartPos, eventChance, ufoRadius;
+int ufoSpawnRand, ufoSpawnLimit, ufoFireRand, ufoFireLimit;
+PShape ufoShape;
 PVector ufoPos, ufoVel;
-int initial_y;
-int eventchance;
-boolean ufo_event;
-int ufo_radius;
-int ufo_rand_limit;
-int ufo_max_limit;
+boolean ufoEvent;
+
 
 /*********************************************************/
 
@@ -122,15 +116,17 @@ void setup() {
 	astroSplitNum = 2; //number of asteroids a hit asteroid splits into
 
   //ufo
-  initial_y = int(random(100, height-100));
-  ufoscale = 7;
-  ufoPos = new PVector(0, initial_y);
+  ufoStartPos = int(random(100, height-100));
+  ufoScale = 7;
+  ufoPos = new PVector(0, ufoStartPos);
   ufoVel = new PVector(2.5, 2.5);
-  ufo_event = false; 
-  ufo_rand_limit = 500; //  random number added to num of frames to spawn ufo
-  ufo_max_limit =  1000; // number of frames until ufo spawns
-  ufo_radius = 50;
-  eventchance=0; // counter for frames. used to determine if events occur
+  ufoEvent = false; 
+  ufoSpawnRand = 500; //  random number added to num of frames to spawn ufo
+  ufoSpawnLimit =  1000; // number of frames until ufo spawns
+  ufoRadius = 50;
+  eventChance = 0; // counter for frames. used to determine if events occur
+  ufoFireRand = 100;
+  ufoFireLimit = 20;
 
 	/*******************************************************/
 }
@@ -149,19 +145,20 @@ void draw() {
     pauseScreen();
 
   } else if (shipRespawn) {
-    if (ufo_event == true) {
+    if (ufoEvent == true) {
       ufo();
      }
     hud();
     shipRespawn();
     shots();
     astros();
+    ufoFire();
 
   } else {
     if (astroPos.length < 1) {
       newRound();
     }
-    if (ufo_event == true) {
+    if (ufoEvent == true) {
       ufo();
      }
     hud();
@@ -169,6 +166,7 @@ void draw() {
     shots();
     astros();
     events();
+    ufoFire();
   }
 }
 
@@ -461,8 +459,8 @@ void shipCollision() {
   */
   PVector ship = shipPos.copy();
   PVector ufo = ufoPos.copy();
-  if ((ship.sub(ufo)).mag() <= ufo_radius) {
-      shipHit();
+  if ((ship.sub(ufo)).mag() <= ufoRadius) {
+    shipHit();
   }
 }
 
@@ -712,45 +710,59 @@ void astroErase(int i) {
 }
 
 void ufo() {
-  if (ufoPos.x < width) {
-  stroke(255);
-  noFill();
-  beginShape();
-    vertex(ufoPos.x-10*ufoscale, ufoPos.y);
-    vertex(ufoPos.x-5*ufoscale, ufoPos.y+2*ufoscale);
-    vertex(ufoPos.x+5*ufoscale, ufoPos.y+2*ufoscale);
-    vertex(ufoPos.x+10*ufoscale, ufoPos.y);
-    vertex(ufoPos.x-10*ufoscale, ufoPos.y);
-    vertex(ufoPos.x-5*ufoscale, ufoPos.y-2*ufoscale);
-    vertex(ufoPos.x+5*ufoscale, ufoPos.y-2*ufoscale);
-    vertex(ufoPos.x+10*ufoscale, ufoPos.y);
-    vertex(ufoPos.x+5*ufoscale, ufoPos.y-2*ufoscale);
-    vertex(ufoPos.x+2*ufoscale, ufoPos.y-4*ufoscale);
-    vertex(ufoPos.x-2*ufoscale, ufoPos.y-4*ufoscale);
-    vertex(ufoPos.x-5*ufoscale, ufoPos.y-2*ufoscale);
-    endShape();
-    
-    if (ufoPos.y > initial_y + 100 || ufoPos.y<initial_y - 100 ){
-      ufoVel.y = ufoVel.y*-1;
-    }
-      
-    ufoPos.add(ufoVel);
-  
-} else {
-    ufo_event = false;
-    eventchance = 0;
-    ufoPos.x = 0;
-    ufoPos.y = random(100, height-100);
+	/*
+	handles ufo behaviour once it's spawned
+	*/
+	if (ufoPos.x < width) {
+		stroke(255);
+		noFill();
+		beginShape();
+			vertex(ufoPos.x-10*ufoScale, ufoPos.y);
+			vertex(ufoPos.x-5*ufoScale, ufoPos.y+2*ufoScale);
+			vertex(ufoPos.x+5*ufoScale, ufoPos.y+2*ufoScale);
+			vertex(ufoPos.x+10*ufoScale, ufoPos.y);
+			vertex(ufoPos.x-10*ufoScale, ufoPos.y);
+			vertex(ufoPos.x-5*ufoScale, ufoPos.y-2*ufoScale);
+			vertex(ufoPos.x+5*ufoScale, ufoPos.y-2*ufoScale);
+			vertex(ufoPos.x+10*ufoScale, ufoPos.y);
+			vertex(ufoPos.x+5*ufoScale, ufoPos.y-2*ufoScale);
+			vertex(ufoPos.x+2*ufoScale, ufoPos.y-4*ufoScale);
+			vertex(ufoPos.x-2*ufoScale, ufoPos.y-4*ufoScale);
+			vertex(ufoPos.x-5*ufoScale, ufoPos.y-2*ufoScale);
+		endShape();
+
+		if (ufoPos.y > ufoStartPos + 100 || ufoPos.y<ufoStartPos - 100 ){
+			ufoVel.y *= -1;
+		}
+		
+		ufoPos.add(ufoVel);
+		
+	} else {		
+		ufoEvent = false;
+		eventChance = 0;
+		ufoPos.x = 0;
+		ufoPos.y = random(100, height-100);
+	}
 }
+
+void ufoFire() {
+	/*
+	randomly determines whether the ufo will fire this frame
+	handles ufo shot behaviour if it does
+	*/
 }
-  
+
 void events() {
-  eventchance+=1;
-  if (eventchance + random(0, ufo_rand_limit) > ufo_max_limit && ufo_event == false) {
-    ufo_event = true;
-    initial_y = int(random(100, height-100));
-    ufoPos.y = initial_y;
-  }
+	/*
+	handles random event chances for:
+		- ufo
+	*/
+	eventChance++;
+	if (eventChance + random(0, ufoSpawnRand) > ufoSpawnLimit && ufoEvent == false) {
+		ufoEvent = true;
+		ufoStartPos = int(random(100, height-100));
+		ufoPos.y = ufoStartPos;
+	}
 }
 
 /*********************************************************/
