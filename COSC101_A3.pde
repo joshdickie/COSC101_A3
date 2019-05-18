@@ -1,3 +1,5 @@
+//ORIGINAL, ROUND ASTEROIDS
+
 /******************************************************************************
 	COSC101 ASSIGNMENT 3
 		Joshua Dickie	- 220195992
@@ -8,37 +10,32 @@
 	The aim of the player is to earn points by destroying asteroids, while
 	avoiding being hit by them.
 
-	In order to run this sketch, ensure that the sketch's folder contains the
-	following files:
-					- blah.png
-					- blah_blah.mp3
-					- whatever.ttf
+	In order to run this sketch, ensure that the sketch's 'data' folder
+	contains the following files:
+					- OCRAExtended-30.vlw
+					- startScreen.png
 
-	Changelog:
-		wrote header text, cleaned up program commenting, format, etc. (Josh)
-    made asteroids spawn on both sides of the screen (Josh)
-    Added score in top left hand corner and added font to make it look 'oldschool' (Linda)
-    font should be uploaded into data of sketch (Linda)
-    Added lives but this needs to be worked on - would prefer 3 triangles than a number (Linda)
-    Also currently allows number to go into negative as opposed to GameOver at 0 as has not yet been worked on (Linda)
-    
-		Last Updated: 11/05/2019
+		Last Updated: 17/05/2019
 		Processing Version: 3.5.3
 ******************************************************************************/
 
-//declare variables
+/********************declare variables********************/
 
 //system
-boolean gameOver, pause, newRound;
-boolean inForward, inReverse, inLeft, inRight, inSpacebar; //inputs
-int round, score, lives;
+PImage startScreen;
 PFont font;
+boolean gameStart, paused, gameOver, newRound;
+	//hud
+	int livesInitial, lives, round, score;
+	//inputs
+	boolean inForward, inReverse, inRight, inLeft, inSpacebar, inY, inN;
 
 //ship
 PVector shipPos, shipVel, shipDir;
-float shipVelMax, shipAcc, shipDrag, shipScale, shipTurn;
-PShape ship;
-boolean shipHit, shipRespawn;
+PShape ship, shield;
+boolean shipRespawn;
+float shipScale, shipVelMax, shipAcc, shipDrag, shipTurn, iFrames, iCounter;
+
 //shots
 PVector[] shotPos, shotVel;
 float[] shotTime;
@@ -48,38 +45,32 @@ float shotSpeed, shotLife;
 PVector[] astroPos, astroVel;
 float[] astroSize;
 float astroSizeSmall, astroSizeMid, astroSizeLarge, astroVelMin, astroVelMax;
-int astroSplitNum;
+int astroNumInitial, astroSplitNum;
 
-
-// Note to self: if the screen keeps greying out and you don't know why it probably becuase you didn't
-// define asteroidNum before making xArray, yArray and randArray
-int asteroidNum = 20;
-int asteroidPoint = 12;
-float[][] xArray = new float[asteroidNum][asteroidPoint];
-float[][] yArray = new float[asteroidNum][asteroidPoint];
-float[][] randArray = new float[asteroidNum][asteroidPoint];
-int randangle;
-int radius;
-boolean newGeneration;
-int angleSeed;
-
-int total_time = 0;
-int time_start = 0;
-int time_lapsed = 0;
+/*********************************************************/
 
 
 void setup() {
+	//size(1500, 1000); //TODO: make fullscreen, is only like this for debugging
 	fullScreen();
 	noCursor();
-  font = loadFont("OCRAExtended-30.vlw");
 
-	//load images and set parameters based on image sizes
+	/**********************load assets**********************/
 
-	//initialise variables
+	startScreen = loadImage("startScreen.png");
+	startScreen.resize(width, height);
+	font = loadFont("OCRAExtended-30.vlw");
+
+	/*******************************************************/
+
+
+	/******************initialise variables*****************/
 
 	//system
+	gameStart= true;
 	round = 1;
-  lives = 3;
+	livesInitial = 3;
+	lives = livesInitial;
 
 	//ship
 	shipPos = new PVector(width/2, height/2);
@@ -88,68 +79,67 @@ void setup() {
 	shipVelMax = 10;
 	shipAcc = 0.5;
 	shipDrag = 0.99;
-	shipScale = 50;
+	shipScale = height/20;
 	shipTurn = 0.1; //turning speed
+	iFrames = 100; // invincibility frames after respawn
 	ship = createShape(TRIANGLE, shipScale, 0,
-					-shipScale/2, shipScale/2,
-					-shipScale/2, -shipScale/2);
+						-shipScale/2, shipScale/2,
+						-shipScale/2, -shipScale/2);
 	ship.rotate(shipDir.heading());
-  shipHit = false;
-  shipRespawn = false;
-  
+	shield = createShape(ELLIPSE, 0, 0, shipScale*2.5, shipScale*2);
+	shield.rotate(shipDir.heading());
+	shield.setStroke(color(0, 100, 255));
+	shield.setFill(color(0, 50, 150));
+
 	//shots
 	shotPos = new PVector[0];
 	shotVel = new PVector[0];
 	shotTime = new float[0];
 	shotSpeed = 30;
-	shotLife = 1000; //lifespan of a friendly shot
+	shotLife = 1000; //lifespan of a shot
 
 	//asteroids
 	astroPos = new PVector[0];
-	astroVel = new PVector [0];
+	astroVel = new PVector[0];
 	astroSize = new float[0];
 	astroSizeSmall = shipScale;
 	astroSizeMid = shipScale * 2;
-	astroSizeLarge = shipScale * 4;
-	astroVelMin = 1;
-	astroVelMax = 5;
-	astroSplitNum = 2; //number of asteroids that a hit asteroid splits into
+	astroSizeLarge = shipScale * 3;
+	astroVelMin = 5;
+	astroVelMax = 10;
+	astroNumInitial = 5; //starting number of asteroids
+	astroSplitNum = 2; //number of asteroids a hit asteroid splits into
 
-
-	asteroidNum = 5;
-	asteroidPoint = 12;
-	radius=100;
-	newGeneration = true;
-	angleSeed = 60;
-
+	/*******************************************************/
 }
-
 
 void draw() {
 	background(0);
-  textFont(font, 30);
-  text (score, 100,100);
-  text ("lives", 45, 150);
-  text (lives, 150,150);
 
+	if (gameStart) {
+		startScreen();
 
-	if (astroPos.length < 1) {
-		startRound();
-	}
+	} else if (gameOver) {
+		gameOverScreen();
 
-	if (pause) {
-		pauseMenu();
-	}
+	} else if (paused) {
+		hud();
+		pauseScreen();
 
-	if (!gameOver) {
-		
+	} else if (shipRespawn) {
+		hud();
+		shipRespawn();
 		shots();
+		astros();
+
+	} else {
+		if (astroPos.length < 1) {
+			newRound();
+		}
+		hud();
 		ship();
-    if (!shipRespawn) {
-    collisionCheck();
-    }
-		asteroids();
-    
+		shots();
+		astros();
 	}
 }
 
@@ -161,7 +151,40 @@ void keyReleased() {
 	dropKey(key);
 }
 
-//functions
+/************************functions************************/
+
+void setVars() {
+	/*
+	sets all relevant variables to their start-of-game values
+	used for starting new game
+	*/
+	gameStart = true;
+	paused = false;
+	gameOver = false;
+	newRound = false;
+	shipRespawn = false;
+	lives = livesInitial;
+	round = 1;
+	score = 0;
+	shipPos.set(width/2, height/2);
+	shipVel.set(0, 0);
+	shipDir.set(0, -1);
+	ship = createShape(TRIANGLE, shipScale, 0,
+						-shipScale/2, shipScale/2,
+						-shipScale/2, -shipScale/2);
+	ship.rotate(shipDir.heading());
+	shield = createShape(ELLIPSE, 0, 0, shipScale*2.5, shipScale*2);
+	shield.rotate(shipDir.heading());
+	shield.setStroke(color(0, 100, 255));
+	shield.setFill(color(0, 50, 150));
+
+	while (shotPos.length > 0) {
+		shotErase(0);
+	}
+	while (astroPos.length > 0) {
+		astroErase(0);
+	}
+}
 
 void getKey(int k) {
 	/*
@@ -180,8 +203,17 @@ void getKey(int k) {
 		inRight = true;
 	}
 	if (k == ' ') {
-		fire();
+		fire(); //using the fire function here prevents rapidfire behaviour
 		inSpacebar = true;
+	}
+	if (k == 'p' || k == 'K') {
+		paused = !paused;
+	}
+	if (k == 'y' || k == 'Y') {
+		inY = true;
+	}
+	if (k == 'n' || k == 'N') {
+		inN = true;
 	}
 }
 
@@ -204,27 +236,119 @@ void dropKey(int k) {
 	if (k == ' ') {
 		inSpacebar = false;
 	}
+	if (k == 'y' || k == 'Y') {
+		inY = false;
+	}
+	if (k == 'n' || k == 'N') {
+		inN = false;
+	}
 }
 
-void startRound() {
+void startScreen() {
 	/*
-	begins a new round
+	displays a simple welcome screen upon starting the game
 	*/
-	round += 1;
-	setAsteroids();
+	image(startScreen, 0, 0);
+	fill(255);
+	int unit = height/12;
+	textFont(font, unit);
+	textAlign(LEFT, TOP);
+	text("ASTEROIDS", unit, unit * 2);
+	textFont(font, unit/2);
+	text("press space to start", unit, unit * 3);
+	text("W, A, S, D: move", unit, unit * 4);
+	text("SPACE: fire", unit, unit * 5);
+	text("P: pause", unit, unit * 6);
+	if (inSpacebar) {
+		gameStart = false;
+	}
+}
+
+void hud() {
+	/*
+	displays a game over screen, showing the player their score
+	and prompting them to play again
+	*/
+	fill(255);
+	textFont(font, height/12);
+	textAlign(LEFT, TOP);
+	text("score: " + score, 100, 100);
+	text("lives:" + lives, 100, height/20 + 100);
+}
+
+void gameOverScreen() {
+	/*
+	draws a heads-up display to the screen
+	*/
+	fill(255);
+	textFont(font, height/12);
+	textAlign(CENTER, CENTER);
+	text("GAME OVER", width/2, height * 1/3);
+	text("SCORE: " + score, width/2, height/2);
+	text("play again? Y/N", width/2, height * 2/3);
+
+	if (inY) {
+		setVars();
+	} else if (inN) {
+		exit();
+	}
+}
+
+void pauseScreen() {
+	/*
+	displays a simple pause screen and pauses the game
+	*/
+	shotDraw();
+	astroDraw();
+	shipDraw();
+
+	rectMode(CENTER);
+	stroke(0);
+	fill(0);
+	rect(width/2, height/2, width/4, height/6);
+	fill(255);
+	textFont(font, height/12);
+	textAlign(CENTER, CENTER);
+	text("PAUSED", width/2, height/2);
+}
+
+void newRound() {
+	/*
+	begins a new round, incrementing the round count and setting new asteroids
+	*/
+	astroSet();
+	round +=1;
+}
+
+void astroSet() {
+	/*
+	sets a new round's worth of asteroids.
+	Asteroids are set at a random height, on either the left or right side
+	Number of asteroids is partly determined by the round number
+	*/
+	int astroNum = astroNumInitial + round*2;
+	for (int i = 0; i < astroNum; i++) {
+		PVector newPos = new PVector((random(1)>0.5 ? 0:width),random(height));
+		astroPos = (PVector[])append(astroPos, newPos);
+		PVector newVel = new PVector(random(-1, 1), random(-1, 1));
+		newVel.normalize();
+		astroVel = (PVector[])append(astroVel, newVel);
+		astroSize = append(astroSize, astroSizeLarge);
+
+		newRound = false;
+	}
 }
 
 void ship() {
 	/*
 	handles ship behaviour
 	*/
-  if (!shipRespawn) {
-	moveShip();
-  }
-	drawShip();
+	shipMove();
+	shipDraw();
+	shipCollision();
 }
 
-void moveShip() {
+void shipMove() {
 	/*
 	handles ship movement, rotation/orientation and screen wrapping
 	*/
@@ -240,10 +364,10 @@ void moveShip() {
 		shipDir.mult(-1); //reset ship's direction after reversing
 	}
 
-		if (inLeft) { //left turn
+	if (inLeft) { //left turn
 		shipDir.rotate(-shipTurn);
 	}
-		if (inRight) {// right turn
+	if (inRight) { //right turn
 		shipDir.rotate(shipTurn);
 	}
 
@@ -274,31 +398,103 @@ void shipWrap() {
 	}
 }
 
-void drawShip() {
+void shipDraw() {
 	/*
-	draws the ship
+	draws the ship to the screen
 	*/
-	shape(ship, shipPos.x, shipPos.y);
-	if (inLeft) {
-		ship.rotate(-shipTurn);
+	if (shipRespawn) { //i-frame indicator (shield)
+		shape(shield, shipPos.x, shipPos.y);
 	}
-	if (inRight) {
+	shape(ship, shipPos.x, shipPos.y);
+	if (inLeft && !paused) {
+		ship.rotate(-shipTurn);
+		shield.rotate(-shipTurn);
+	}
+	if (inRight && !paused) {
 		ship.rotate(shipTurn);
+		shield.rotate(shipTurn);
+	}
+}
+
+void shipCollision() {
+	/*
+	checks for and handles collision of the ship with ateroids
+	*/
+	for (int i = 0; i < astroPos.length; i++) {
+		PVector ship = shipPos.copy();
+		PVector astro = astroPos[i].copy();
+		if ((ship.sub(astro)).mag() <= astroSize[i]) {
+			shipHit();
+		}
+	}
+}
+
+void shipHit() {
+	/*
+	handles game behaviour when the ship has collided with an asteroid
+	*/
+	while (shotPos.length > 0) {
+		shotErase(0); //erase all shots
+	}
+
+	shipRespawn = true;
+	lives--;
+	if (lives < 1) {
+		gameOver = true;
+	}
+
+	shipPos.x = width/2;
+	shipPos.y = height/2;
+}
+
+void shipRespawn() {
+	/*
+	handles ship behaviour shortly after respawn
+	*/
+	shipMove();
+	shipDraw();
+	iCounter++;
+	if (iCounter >= iFrames) {
+		shipRespawn = false;
+		iCounter = 0;
+	}
+}
+
+void fire() {
+	/*
+	fires a new shot
+	*/
+	if (!inSpacebar) { //only one shot per keypress
+		PVector newPos = shipPos.copy();
+		shotPos = (PVector[])append(shotPos, newPos);
+		shipDir.normalize();
+		PVector newVel = new PVector();
+		newVel = shipDir.copy();
+		newVel.mult(shotSpeed);
+		newVel.add(shipVel); //adding ship's velocity looks natural
+		shotVel = (PVector[])append(shotVel, newVel);
+
+		//note the shot's time of birth
+		shotTime = append(shotTime, millis());
 	}
 }
 
 void shots() {
 	/*
-	handles friendly projectile behaviour.
+	handles friendly projectilve behaviour
 	*/
-	stroke(255);
-	strokeWeight(4);
+	shotMove();
+	shotDraw();
+}
+
+void shotMove() {
+	/*
+	handles shot movement
+	*/
 	for (int i = 0; i < shotPos.length; i++) {
 		shotPos[i].add(shotVel[i]);
-		point(shotPos[i].x, shotPos[i].y);
 	}
 
-	//wrap shots
 	for (int i = 0; i < shotPos.length; i++) {
 		if (shotPos[i].x < 0 ||
 			shotPos[i].x > width ||
@@ -314,26 +510,6 @@ void shots() {
 		if (millis() - shotTime[i] > shotLife) {
 			shotErase(i);
 		}
-	}
-}
-
-void fire() {
-	/*
-	fires a new shot
-	copies need to be used here - append() affects original vector
-	*/
-	if (!inSpacebar) { //only one shot per keypress
-		PVector newPos = shipPos.copy();
-		shotPos = (PVector[])append(shotPos, newPos);
-		shipDir.normalize();
-		PVector newVel = new PVector();
-		newVel = shipDir.copy();
-		newVel.mult(shotSpeed);
-		newVel.add(shipVel); //adding ship's velocity appears more natural
-		shotVel = (PVector[])append(shotVel, newVel);
-
-		//note the shot's time of birth
-		shotTime = append(shotTime, millis());
 	}
 }
 
@@ -355,7 +531,7 @@ void shotWrap(int i) {
 
 void shotErase(int i) {
 	/*
-	erases shots that have surpassed their lifespan 
+	erases shots that have surpassed their lifespan
 	args: i - the index of the shot to be erased
 	*/
 	shotPos[i] = shotPos[shotPos.length - 1];
@@ -366,48 +542,27 @@ void shotErase(int i) {
 	shotTime = shorten(shotTime);
 }
 
-void setAsteroids () {
+void shotDraw() {
 	/*
-	sets a new round's worth of asteroids in place at the edges of the screen
+	draws shots to the screen
 	*/
-	for (int i = 0; i < round; i++) {
-    //asteroids are set at a random height, on either the right or left side
-		PVector newPos = new PVector((random(1)>0.5 ? 0:width), random(height));
-		astroPos = (PVector[])append(astroPos, newPos);
-		PVector newVel = new PVector(random(-1, 1), random(-1, 1));
-		newVel.normalize();
-		newVel.mult(random(astroVelMin, astroVelMax));
-		astroVel = (PVector[])append(astroVel, newVel);
-		astroSize = append(astroSize, astroSizeLarge);
-
-		newRound = false;
+	stroke(255);
+	strokeWeight(4);
+	for (int i = 0; i < shotPos.length; i++) {
+		point(shotPos[i].x, shotPos[i].y);
 	}
-
-
-//James: used to generate a set of random numbers unique to each asteroid.
-//     uses boolean newGeneration so it only occurs once a round.
-     
-    if (newGeneration) {
-        for (int i = 0; i < asteroidNum; i++) {
-            for (int j = 0; j < asteroidPoint; j++) {
-                randangle = (int) random(angleSeed*j-angleSeed, j*angleSeed);
-                randArray[i][j] = randangle;
-            }
-        }
-        newGeneration = false;
-    }
-
 }
 
-void asteroids() {
+void astros() {
 	/*
-	handles asteroid behaviour, including:
+	handles asteroid behaviour
 	*/
-	moveAsteroids();
-	drawAsteroids();
+	astroMove();
+	astroDraw();
+	astroCollision();
 }
 
-void moveAsteroids() {
+void astroMove() {
 	/*
 	handles asteroid movement
 	*/
@@ -415,7 +570,6 @@ void moveAsteroids() {
 		astroPos[i].add(astroVel[i]);
 	}
 
-	//wrap astroids around screen
 	for (int i = 0; i < astroPos.length; i++) {
 		if (astroPos[i].x + astroSize[i] < 0 ||
 			astroPos[i].x - astroSize[i] > width ||
@@ -426,61 +580,11 @@ void moveAsteroids() {
 	}
 }
 
-void drawAsteroids() {
-	/*
-	draws asteroids to the screen
-	*/
-
-
-     generateAsteroids();
-     for (int i = 0; i < astroPos.length; i++) {
-     beginShape();
-     vertex(xArray[i][0], yArray[i][0]);
-     vertex(xArray[i][1], yArray[i][1]);
-     vertex(xArray[i][2], yArray[i][2]);
-     vertex(xArray[i][3], yArray[i][3]);
-     vertex(xArray[i][4], yArray[i][4]);
-     vertex(xArray[i][5], yArray[i][5]);
-     vertex(xArray[i][6], yArray[i][6]);
-     vertex(xArray[i][7], yArray[i][7]);
-     vertex(xArray[i][8], yArray[i][8]);
-     vertex(xArray[i][9], yArray[i][9]);
-     vertex(xArray[i][10], yArray[i][10]);
-     vertex(xArray[i][11], yArray[i][11]);
-     endShape(CLOSE);
-     }
-}
-/*
-
-	stroke(255);
-	fill(255);
-	strokeWeight(4);
-	for (int i = 0; i < astroPos.length; i++) {
-		ellipse(astroPos[i].x, astroPos[i].y, astroSize[i], astroSize[i]);
-	}
-}
-
-*/
-void generateAsteroids() {
-   
-   //Generates the points for the randomly generated asteroids.
-
-    for (int i = 0; i < astroPos.length; i++) {
-        for (int j = 0; j < asteroidPoint; j++) {
-
-            xArray[i][j] = astroPos[i].x + int(cos(radians(randArray[i][j])) * astroSize[i]);
-            yArray[i][j] = astroPos[i].y + int(sin(radians(randArray[i][j])) * astroSize[i]);
-        }
-    }
-}
-
-
 void astroWrap(int i) {
 	/*
 	handles asteroid wrapping
-	args: i - the index of the astroid being wrapped
+	args: i - the index of the asteroid being wrapped
 	*/
-
 	if (astroPos[i].x + astroSize[i] < 0) {
 		astroPos[i].x = width + astroSize[i];
 	} else if (astroPos[i].x - astroSize[i] > width) {
@@ -492,43 +596,39 @@ void astroWrap(int i) {
 	}
 }
 
-void collisionCheck() {
+void astroDraw() {
 	/*
-	checks for and handles collision of all kinds
-	calls the appropriate function when collision is detected
+	draws asteroids to the screen
 	*/
-  //TODO: FORMATTING, loop containing more than it should
-  for (int k = 0; k < astroPos.length; k++) {
-    PVector ship = shipPos.copy();
-    PVector astro = astroPos[k].copy();
-    if ((ship.sub(astro)).mag() < astroSize[k]) {
-         //println("Over" + k);
-         shipReset();
-    } else {
-      shipHit = false;
-      //println("NOT OVER");
-    }
-    
-	int[] hits = new int[0];
+	stroke(255);
+	fill(0);
+	strokeWeight(4);
+	for (int i = 0; i < astroPos.length; i++) {
+		ellipse(astroPos[i].x, astroPos[i].y, astroSize[i], astroSize[i]);
+	}
+}
+
+void astroCollision() {
+	/*
+	checks for and handles collision between shots and asteroids
+	*/
 	for (int i = 0; i < shotPos.length; i++) {
 		for (int j = 0; j < astroPos.length; j++) {
 			PVector shot = shotPos[i].copy();
-			astro = astroPos[j].copy();
-      
-     
-			if ((shot.sub(astro)).mag() < astroSize[j]) {
+			PVector astro = astroPos[j].copy();
+
+			if ((shot.sub(astro)).mag() <= astroSize[j]) {
 				shotErase(i);
 				astroHit(j);
-      	break; //only one collision per frame, or loop goes out of bounds
-      }
+				break; //only one collision per frame, or loop out of bounds
+			}
 		}
-	}
 	}
 }
 
 void astroHit(int i) {
 	/*
-	handles behaviour of an asteroid which has been hit by a shot
+	handles game behaviour when an asteroid is hit by a shot
 	args: i - the index of the asteroid which has been hit
 	*/
 	if (astroSize[i] != astroSizeSmall) {
@@ -542,22 +642,17 @@ void astroHit(int i) {
 
 void astroSplit(int i) {
 	/*
-	spawns two asteroids of a smaller size at the location of a given asteroid
+	spawns an asteroid of a smaller size at the location of a given asteroid
 	args: i - the index of the asteroid which has been hit
 	*/
 	PVector pos = astroPos[i].copy();
 	astroPos = (PVector[])append(astroPos, pos);
 
 	PVector vel = astroVel[i].copy();
-  //random child velocity is added to parent velocity
 	PVector newVel = PVector.random2D();
 	newVel.mult(random(astroVelMin, astroVelMax));
-	vel.add(newVel);
+	vel.add(newVel); //random child vel added to parent vel
 	astroVel = (PVector[])append(astroVel, vel);
-  /********* TODO ********
-  Add radmonly generated angles for child asteroids
-  They are currently being recycled right now.
-  *************************/
 
 	if (astroSize[i] == astroSizeLarge) {
 		astroSize = append(astroSize, astroSizeMid);
@@ -568,8 +663,8 @@ void astroSplit(int i) {
 
 void astroErase(int i) {
 	/*
-	erases an asteroid that has been hit.
-	TODO: add like a sound or animation or something
+	erases an asteroid
+	args: i - the index of the asteroid to be erased
 	*/
 	astroPos[i] = astroPos[astroPos.length - 1];
 	astroPos = (PVector[])shorten(astroPos);
@@ -579,41 +674,4 @@ void astroErase(int i) {
 	astroSize = shorten(astroSize);
 }
 
-void shipReset() {
-    
-      shipRespawn = true; 
-      /**************** TO DO *******************
-      add timer so ship doesn't move or detects collisions for 
-      2 secs. color effects would also be good.
-      ********************/
-      shipPos.x = width/2;
-      shipPos.y = height/2;
-      shipRespawn = false;
-      lives--;
-}
-
-void pickups() {
-	/*
-	handles pickup behaviour.
-	*/
-}
-
-void hud() {
-	/*
-	handles hud elements.
-	*/
- text ("lives", 45, 150);
- text (lives, 150,150);
-}
-
-void pauseMenu() {
-	/*
-	handles pausing, displaying a menu when the game is paused.
-	*/
-}
-
-void startMenu() {
-	/*
-	displays a start screen upon running the sketch.
-	*/
-}
+/*********************************************************/
