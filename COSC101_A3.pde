@@ -51,7 +51,6 @@ int astroNumInitial, astroSplitNum;
 
 
 void setup() {
-	//size(1500, 1000); //TODO: make fullscreen, is only like this for debugging
 	fullScreen();
 	noCursor();
 
@@ -83,8 +82,8 @@ void setup() {
 	shipTurn = 0.1; //turning speed
 	iFrames = 100; // invincibility frames after respawn
 	ship = createShape(TRIANGLE, shipScale, 0,
-						-shipScale/2, shipScale/2,
-						-shipScale/2, -shipScale/2);
+										-shipScale/2, shipScale/2,
+										-shipScale/2, -shipScale/2);
 	ship.rotate(shipDir.heading());
 	shield = createShape(ELLIPSE, 0, 0, shipScale*2.5, shipScale*2);
 	shield.rotate(shipDir.heading());
@@ -170,8 +169,8 @@ void setVars() {
 	shipVel.set(0, 0);
 	shipDir.set(0, -1);
 	ship = createShape(TRIANGLE, shipScale, 0,
-						-shipScale/2, shipScale/2,
-						-shipScale/2, -shipScale/2);
+										-shipScale/2, shipScale/2,
+										-shipScale/2, -shipScale/2);
 	ship.rotate(shipDir.heading());
 	shield = createShape(ELLIPSE, 0, 0, shipScale*2.5, shipScale*2);
 	shield.rotate(shipDir.heading());
