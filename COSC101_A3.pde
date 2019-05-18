@@ -47,6 +47,16 @@ float[] astroSize;
 float astroSizeSmall, astroSizeMid, astroSizeLarge, astroVelMin, astroVelMax;
 int astroNumInitial, astroSplitNum;
 
+//ufo
+
+int ufoscale;
+PShape ufo_shape;
+PVector ufoPos, ufoVel;
+int initial_y;
+int eventchance = 0;
+boolean ufo_event;
+
+
 /*********************************************************/
 
 
@@ -109,37 +119,51 @@ void setup() {
 	astroNumInitial = 5; //starting number of asteroids
 	astroSplitNum = 2; //number of asteroids a hit asteroid splits into
 
+  //ufo
+  initial_y = int(random(100, height-100));
+  ufoscale = 7;
+  ufoPos = new PVector(0, initial_y);
+  ufoVel = new PVector(2.5, 2.5);
+  ufo_event = false; 
+
 	/*******************************************************/
 }
 
 void draw() {
-	background(0);
+  background(0);
 
-	if (gameStart) {
-		startScreen();
+  if (gameStart) {
+    startScreen();
 
-	} else if (gameOver) {
-		gameOverScreen();
+  } else if (gameOver) {
+    gameOverScreen();
 
-	} else if (paused) {
-		hud();
-		pauseScreen();
+  } else if (paused) {
+    hud();
+    pauseScreen();
 
-	} else if (shipRespawn) {
-		hud();
-		shipRespawn();
-		shots();
-		astros();
+  } else if (shipRespawn) {
+    if (ufo_event == true) {
+      ufo();
+     }
+    hud();
+    shipRespawn();
+    shots();
+    astros();
 
-	} else {
-		if (astroPos.length < 1) {
-			newRound();
-		}
-		hud();
-		ship();
-		shots();
-		astros();
-	}
+  } else {
+    if (astroPos.length < 1) {
+      newRound();
+    }
+    if (ufo_event == true) {
+      ufo();
+     }
+    hud();
+    ship();
+    shots();
+    astros();
+    events();
+  }
 }
 
 void keyPressed() {
@@ -671,6 +695,48 @@ void astroErase(int i) {
 	astroVel = (PVector[])shorten(astroVel);
 	astroSize[i] = astroSize[astroSize.length - 1];
 	astroSize = shorten(astroSize);
+}
+
+void ufo() {
+  if (ufoPos.x < width) {
+  stroke(255);
+  noFill();
+  beginShape();
+    vertex(ufoPos.x-10*ufoscale, ufoPos.y);
+    vertex(ufoPos.x-5*ufoscale, ufoPos.y+2*ufoscale);
+    vertex(ufoPos.x+5*ufoscale, ufoPos.y+2*ufoscale);
+    vertex(ufoPos.x+10*ufoscale, ufoPos.y);
+    vertex(ufoPos.x-10*ufoscale, ufoPos.y);
+    vertex(ufoPos.x-5*ufoscale, ufoPos.y-2*ufoscale);
+    vertex(ufoPos.x+5*ufoscale, ufoPos.y-2*ufoscale);
+    vertex(ufoPos.x+10*ufoscale, ufoPos.y);
+    vertex(ufoPos.x+5*ufoscale, ufoPos.y-2*ufoscale);
+    vertex(ufoPos.x+2*ufoscale, ufoPos.y-4*ufoscale);
+    vertex(ufoPos.x-2*ufoscale, ufoPos.y-4*ufoscale);
+    vertex(ufoPos.x-5*ufoscale, ufoPos.y-2*ufoscale);
+    endShape();
+    
+    if (ufoPos.y > initial_y + 100 || ufoPos.y<initial_y - 100 ){
+      ufoVel.y = ufoVel.y*-1;
+    }
+      
+    ufoPos.add(ufoVel);
+  
+} else {
+    ufo_event = false;
+    eventchance = 0;
+    ufoPos.x = 0;
+    ufoPos.y = random(100, height-100);
+}
+}
+  
+void events() {
+  eventchance+=1;
+  if (eventchance + random(0, 500) > 1000 && ufo_event == false) {
+    ufo_event = true;
+    initial_y = int(random(100, height-100));
+    ufoPos.y = initial_y;
+  }
 }
 
 /*********************************************************/
