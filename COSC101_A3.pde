@@ -13,7 +13,7 @@
 					- OCRAExtended-30.vlw
 					- startScreen.png
 
-		Last Updated: 17/05/2019
+		Last Updated: 20/05/2019
 		Processing Version: 3.5.3
 ******************************************************************************/
 
@@ -47,10 +47,11 @@ int astroNumInitial, astroSplitNum;
 
 //ufo
 int ufoScale, ufoStartPos, eventChance, ufoRadius;
-int ufoSpawnRand, ufoSpawnLimit, ufoFireRand, ufoFireLimit;
+int ufoSpawnRand, ufoSpawnLimit, ufoShotRand, ufoShotLimit;
+float ufoShotSize, ufoShotSpeed;
 PShape ufoShape;
-PVector ufoPos, ufoVel;
-boolean ufoEvent;
+PVector ufoPos, ufoVel, ufoShotPos, ufoShotVel;
+boolean ufoEvent, ufoShotEvent;
 
 
 /*********************************************************/
@@ -73,7 +74,6 @@ void setup() {
 
 	//system
 	gameStart= true;
-	round = 1;
 	livesInitial = 3;
 	lives = livesInitial;
 
@@ -115,59 +115,68 @@ void setup() {
 	astroNumInitial = 5; //starting number of asteroids
 	astroSplitNum = 2; //number of asteroids a hit asteroid splits into
 
-  //ufo
-  ufoStartPos = int(random(100, height-100));
-  ufoScale = 7;
-  ufoPos = new PVector(0, ufoStartPos);
-  ufoVel = new PVector(2.5, 2.5);
-  ufoEvent = false; 
-  ufoSpawnRand = 500; //  random number added to num of frames to spawn ufo
-  ufoSpawnLimit =  1000; // number of frames until ufo spawns
-  ufoRadius = 50;
-  eventChance = 0; // counter for frames. used to determine if events occur
-  ufoFireRand = 100;
-  ufoFireLimit = 20;
+	//ufo
+	ufoStartPos = int(random(100, height-100));
+	ufoScale = 7;
+	ufoPos = new PVector(0, ufoStartPos);
+	ufoVel = new PVector(2.5, 2.5);
+	ufoEvent = false; 
+	ufoSpawnRand = 500; //  random number added to num of frames to spawn ufo
+	ufoSpawnLimit =  1000; // number of frames until ufo spawns
+	ufoRadius = 50;
+	eventChance = 0; // counter for frames. used to determine if events occur
+	ufoShotPos = new PVector();
+	ufoShotVel = new PVector();
+	ufoShotRand = 1000;
+	ufoShotLimit = 950;
+	ufoShotSpeed = 5;
+	ufoShotSize = shipScale/2;
 
 	/*******************************************************/
 }
 
 void draw() {
-  background(0);
+	background(0);
 
-  if (gameStart) {
-    startScreen();
+	if (gameStart) {
+		startScreen();
 
-  } else if (gameOver) {
-    gameOverScreen();
+	} else if (gameOver) {
+		gameOverScreen();
 
-  } else if (paused) {
-    hud();
-    pauseScreen();
+	} else if (paused) {
+		pauseScreen();
+		hud();
 
-  } else if (shipRespawn) {
-    if (ufoEvent == true) {
-      ufo();
-     }
-    hud();
-    shipRespawn();
-    shots();
-    astros();
-    ufoFire();
+	} else if (shipRespawn) {
+		shipRespawn();
+		shots();
+		astros();
+		if (ufoEvent) {
+			ufo();
+		}
+		events();
+		hud();
 
-  } else {
-    if (astroPos.length < 1) {
-      newRound();
-    }
-    if (ufoEvent == true) {
-      ufo();
-     }
-    hud();
-    ship();
-    shots();
-    astros();
-    events();
-    ufoFire();
-  }
+	} else { //main game loop
+		if (astroPos.length < 1) {
+			newRound();
+		}
+		if (ufoEvent) {
+			ufo();
+		}
+		ship();
+		shots();
+		astros();
+		if (ufoEvent) {
+			ufo();
+		}
+		if (ufoShotEvent) {
+			ufoShot();
+		}
+		events();
+		hud();
+	}
 }
 
 void keyPressed() {
@@ -179,39 +188,6 @@ void keyReleased() {
 }
 
 /************************functions************************/
-
-void setVars() {
-	/*
-	sets all relevant variables to their start-of-game values
-	used for starting new game
-	*/
-	gameStart = true;
-	paused = false;
-	gameOver = false;
-	newRound = false;
-	shipRespawn = false;
-	lives = livesInitial;
-	round = 1;
-	score = 0;
-	shipPos.set(width/2, height/2);
-	shipVel.set(0, 0);
-	shipDir.set(0, -1);
-	ship = createShape(TRIANGLE, shipScale, 0,
-										-shipScale/2, shipScale/2,
-										-shipScale/2, -shipScale/2);
-	ship.rotate(shipDir.heading());
-	shield = createShape(ELLIPSE, 0, 0, shipScale*2.5, shipScale*2);
-	shield.rotate(shipDir.heading());
-	shield.setStroke(color(0, 100, 255));
-	shield.setFill(color(0, 50, 150));
-
-	while (shotPos.length > 0) {
-		shotErase(0);
-	}
-	while (astroPos.length > 0) {
-		astroErase(0);
-	}
-}
 
 void getKey(int k) {
 	/*
@@ -299,8 +275,8 @@ void hud() {
 	fill(255);
 	textFont(font, height/12);
 	textAlign(LEFT, TOP);
-	text("score: " + score, 100, 100);
-	text("lives:" + lives, 100, height/20 + 100);
+	text("score:" + score, 100, 100);
+	text("lives:" + lives, 100, height/12 + 100);
 }
 
 void gameOverScreen() {
@@ -315,7 +291,7 @@ void gameOverScreen() {
 	text("play again? Y/N", width/2, height * 2/3);
 
 	if (inY) {
-		setVars();
+		gameReset();
 	} else if (inN) {
 		exit();
 	}
@@ -337,6 +313,41 @@ void pauseScreen() {
 	textFont(font, height/12);
 	textAlign(CENTER, CENTER);
 	text("PAUSED", width/2, height/2);
+}
+
+void gameReset() {
+	/*
+	sets all relevant variables to their start-of-game values
+	used for starting new game
+	*/
+	gameStart = true;
+	paused = false;
+	gameOver = false;
+	newRound = false;
+	shipRespawn = false;
+	lives = livesInitial;
+	round = 1;
+	score = 0;
+	shipPos.set(width/2, height/2);
+	shipVel.set(0, 0);
+	shipDir.set(0, -1);
+	ship = createShape(TRIANGLE, shipScale, 0,
+										-shipScale/2, shipScale/2,
+										-shipScale/2, -shipScale/2);
+	ship.rotate(shipDir.heading());
+	shield = createShape(ELLIPSE, 0, 0, shipScale*2.5, shipScale*2);
+	shield.rotate(shipDir.heading());
+	shield.setStroke(color(0, 100, 255));
+	shield.setFill(color(0, 50, 150));
+	ufoPos.x = width;
+	ufoShotEvent = false;
+
+	while (shotPos.length > 0) {
+		shotErase(0);
+	}
+	while (astroPos.length > 0) {
+		astroErase(0);
+	}
 }
 
 void newRound() {
@@ -445,23 +456,36 @@ void shipDraw() {
 
 void shipCollision() {
 	/*
-	checks for and handles collision of the ship with ateroids
+	checks for and handles collision of the ship with ateroids, ufo and ufo shot
 	*/
+	PVector ship;
+	PVector astro;
+	PVector ufo;
+	PVector ufoShot;
+
+	//asteroids
 	for (int i = 0; i < astroPos.length; i++) {
-		PVector ship = shipPos.copy();
-		PVector astro = astroPos[i].copy();
+		ship = shipPos.copy();
+		astro = astroPos[i].copy();
 		if ((ship.sub(astro)).mag() <= astroSize[i]) {
 			shipHit();
 		}
 	}
-  /* 
-  Checks to see if ship collides with ufo
-  */
-  PVector ship = shipPos.copy();
-  PVector ufo = ufoPos.copy();
-  if ((ship.sub(ufo)).mag() <= ufoRadius) {
-    shipHit();
-  }
+
+	//ufo
+	ship = shipPos.copy();
+	ufo = ufoPos.copy();
+	if ((ship.sub(ufo)).mag() <= ufoRadius) {
+		shipHit();
+	}
+
+	//ufo shot
+	ship = shipPos.copy();
+	ufoShot = ufoShotPos.copy();
+	if ((ship.sub(ufoShot)).mag() <= ufoShotSize) {
+		ufoShotEvent = false;
+		shipHit();
+	}
 }
 
 void shipHit() {
@@ -480,6 +504,8 @@ void shipHit() {
 
 	shipPos.x = width/2;
 	shipPos.y = height/2;
+
+	ufoShotEvent = false;
 }
 
 void shipRespawn() {
@@ -731,7 +757,7 @@ void ufo() {
 			vertex(ufoPos.x-5*ufoScale, ufoPos.y-2*ufoScale);
 		endShape();
 
-		if (ufoPos.y > ufoStartPos + 100 || ufoPos.y<ufoStartPos - 100 ){
+		if (ufoPos.y > ufoStartPos + width/10 || ufoPos.y<ufoStartPos - width/10 ){
 			ufoVel.y *= -1;
 		}
 		
@@ -741,27 +767,105 @@ void ufo() {
 		ufoEvent = false;
 		eventChance = 0;
 		ufoPos.x = 0;
-		ufoPos.y = random(100, height-100);
+		ufoPos.y = random(width/10, height - width/10);
+	}
+	ufoCollision();
+}
+
+void ufoCollision() {
+	/*
+	checks for and handles ufo collision with friendly shots
+	*/
+	for (int i = 0; i < shotPos.length; i++) {
+		PVector shot = shotPos[i].copy();
+		PVector ufo = ufoPos.copy();
+		if ((shot.sub(ufo)).mag() <= ufoRadius) {
+			shotErase(i);
+			ufoHit();
+		}
 	}
 }
 
-void ufoFire() {
+void ufoHit() {
 	/*
-	randomly determines whether the ufo will fire this frame
-	handles ufo shot behaviour if it does
+	handles game behaviour when the ufo is hit by a friendly shot
 	*/
+	ufoPos.x = width;
+	score += 5;
+} 
+
+void ufoShot() {
+	/*
+	handles ufo shot behaviour
+	*/
+	ufoShotMove();
+	ufoShotDraw();
+	ufoShotCollision();
+}
+
+void ufoShotMove() {
+	/*
+	handles ufo shot movement
+	*/
+	PVector shot = ufoShotPos.copy();
+	PVector ship = shipPos.copy();
+	ufoShotVel.set(ship.sub(shot));
+	ufoShotVel.setMag(ufoShotSpeed);
+
+	ufoShotPos.add(ufoShotVel);
+}
+
+void ufoShotDraw() {
+	/*
+	draws the ufo shot to the screen
+	*/
+	stroke(255);
+	fill(0);
+	strokeWeight(4);
+	ellipse(ufoShotPos.x, ufoShotPos.y, ufoShotSize, ufoShotSize);
+}
+
+void ufoShotCollision() {
+	/*
+	checks for and handles collision between ufo shot and friendly shots
+	*/
+	for (int i = 0; i < shotPos.length; i++) {
+		PVector shot = shotPos[i].copy();
+		PVector ufoShot = ufoShotPos.copy();
+		if ((shot.sub(ufoShot)).mag() <= ufoShotSize) {
+			shotErase(i);
+			ufoShotHit();
+		}
+	}
+}
+
+void ufoShotHit() {
+	/*
+	handles game behaviour when the ufo shot is hit
+	*/
+	ufoShotEvent = false;
 }
 
 void events() {
 	/*
 	handles random event chances for:
 		- ufo
+		- ufo shot
 	*/
 	eventChance++;
-	if (eventChance + random(0, ufoSpawnRand) > ufoSpawnLimit && ufoEvent == false) {
+
+	//ufo
+	if (eventChance+random(ufoSpawnRand) > ufoSpawnLimit && !ufoEvent) {
 		ufoEvent = true;
-		ufoStartPos = int(random(100, height-100));
+		ufoStartPos = int(random(width/10, height - width/10));
 		ufoPos.y = ufoStartPos;
+	}
+
+	//ufo shot
+	if (ufoEvent && !ufoShotEvent && !shipRespawn &&
+			random(ufoShotRand) > ufoShotLimit) {
+				ufoShotEvent = true;
+				ufoShotPos.set(ufoPos);
 	}
 }
 
