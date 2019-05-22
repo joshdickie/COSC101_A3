@@ -1,0 +1,55 @@
+Josh:	hi, this is the assignment 3 overview video for group 1. My name's Josh
+
+James:	my name's James
+
+Linda:	and my name's Linda
+
+Josh:	this video will be in four parts, the first being an open-forum
+	discussion of the general design choices that we made and the challenges
+	that we met, along with a quick demo of the game. We're then going to
+	split up and each make a short video talking more in-depth about the
+	specifics of the code, with each of us discussing the part that we're
+	most familiar with.
+
+	So first let's start up the game and show you how it works. The game
+	opens to a start screen which gives you some information on the controls
+	and prompts you to hit space to play, which I'll do now. This probably
+	all looks familiar and boring to you, so I won't spend too long on it,
+	you fly the ship, you shoot the asteroids, they split up. When you reach
+	the edge of the screen your ship will wrap around, and so do the asteroids
+	and shots. When you collide with a hazard, the ship respawns with that
+	blue shield indicator to let you know that you've got some invulnerability
+	frames. The HUD in the upper-left corner displays the current score and
+	the remaining lives. When you hit P the game will pause, P again unpauses.
+	Every frame there's a random chance that the UFO will spawn, he moves from
+	left to right and shoots rounds at you which move slowly but home in.
+	When you destroy all of the asteroids in a round, a new round begins with
+	more asteroids than the previous round. The game over screen prompts the
+	player to either play again or quit the game.
+	
+	So now we'll talk about some of the general design choices that we made.
+	We decided to use PVectors to represent a lot of the information in the
+	game, because it's really convenient to be able to refer to x and y
+	coordinates in the code. There were some issues figuring out what can
+	and can't be done with different datatypes, but once we got over those
+	hurdles the use of PVectors really helped with the readability of our
+	code.
+
+James:	Since we needed to store a lot of the same types of information for
+	asteroids and shots, we decided to use arrays to store a lot of the
+	variables in the program. We can see where we've declared our variables
+	on-screen that we used PVector arrays and float arrays to store different
+	types of data which are accessed by the program, including position and
+	velocity of asteroids and shots, as well as asteroid sizes and shot decay
+	timers. We'll go into this in more depth in later parts to this video.
+
+Linda:	For the aesthetics of the game we decided to stick to the simple old-school
+	atari style, and we think it looks pretty good. We made the game fullscreen
+	and made sure to scale everything so that it would look good on a variety of
+	aspect ratios. The start screen that you saw was a PNG image, because we
+	found that looked quite a bit better than drawing text to the screen.
+
+Josh:	That about wraps up the first part of this video, so we'll see you in parts
+	2-4 when we go more in-depth with the code - see you then!
+
+all say goodbye to the lovely viewers
