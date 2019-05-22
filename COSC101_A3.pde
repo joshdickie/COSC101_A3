@@ -12,9 +12,12 @@
 	contains the following files:
 					- OCRAExtended-30.vlw
 					- startScreen.png
+          - pew.wav
+          - hit.wav
 
-		Last Updated: 20/05/2019
+		Last Updated: 22/05/2019
 		Processing Version: 3.5.3
+    importing processing.sound to use sound effects import processing.sound.*;
 ******************************************************************************/
 
 /********************declare variables********************/
@@ -27,6 +30,9 @@ boolean gameStart, paused, gameOver, newRound;
 	int livesInitial, lives, round, score;
 	//inputs
 	boolean inForward, inReverse, inRight, inLeft, inSpacebar, inY, inN;
+
+import processing.sound.*;
+SoundFile file;
 
 //ship
 PVector shipPos, shipVel, shipDir;
@@ -254,14 +260,6 @@ void startScreen() {
 	image(startScreen, 0, 0);
 	fill(255);
 	int unit = height/12;
-	textFont(font, unit);
-	textAlign(LEFT, TOP);
-	text("ASTEROIDS", unit, unit * 2);
-	textFont(font, unit/2);
-	text("press space to start", unit, unit * 3);
-	text("W, A, S, D: move", unit, unit * 4);
-	text("SPACE: fire", unit, unit * 5);
-	text("P: pause", unit, unit * 6);
 	if (inSpacebar) {
 		gameStart = false;
 	}
@@ -469,6 +467,8 @@ void shipCollision() {
 		astro = astroPos[i].copy();
 		if ((ship.sub(astro)).mag() <= astroSize[i]) {
 			shipHit();
+      file = new SoundFile(this, "hit.wav");
+      file.play();
 		}
 	}
 
@@ -526,6 +526,8 @@ void fire() {
 	fires a new shot
 	*/
 	if (!inSpacebar) { //only one shot per keypress
+    file = new SoundFile(this, "pew.wav");
+    file.play();
 		PVector newPos = shipPos.copy();
 		shotPos = (PVector[])append(shotPos, newPos);
 		shipDir.normalize();
