@@ -267,18 +267,6 @@ void startScreen() {
 	}
 }
 
-void hud() {
-	/*
-	displays a game over screen, showing the player their score
-	and prompting them to play again
-	*/
-	fill(255);
-	textFont(font, height/12);
-	textAlign(LEFT, TOP);
-	text("score:" + score, 100, 100);
-	text("lives:" + lives, 100, height/12 + 100);
-}
-
 void gameOverScreen() {
 	/*
 	draws a heads-up display to the screen
@@ -313,6 +301,18 @@ void pauseScreen() {
 	textFont(font, height/12);
 	textAlign(CENTER, CENTER);
 	text("PAUSED", width/2, height/2);
+}
+
+void hud() {
+	/*
+	displays a game over screen, showing the player their score
+	and prompting them to play again
+	*/
+	fill(255);
+	textFont(font, height/12);
+	textAlign(LEFT, TOP);
+	text("score:" + score, 100, 100);
+	text("lives:" + lives, 100, height/12 + 100);
 }
 
 void gameReset() {
