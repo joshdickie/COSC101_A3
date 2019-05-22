@@ -12,16 +12,21 @@
 	contains the following files:
 					- OCRAExtended-30.vlw
 					- startScreen.png
+					- pew.wav
+					- hit.wav
 
-		Last Updated: 20/05/2019
+		Last Updated: 22/05/2019
 		Processing Version: 3.5.3
 ******************************************************************************/
+
+import processing.sound.*;
 
 /********************declare variables********************/
 
 //system
 PImage startScreen;
 PFont font;
+SoundFile sfx;
 boolean gameStart, paused, gameOver, newRound;
 	//hud
 	int livesInitial, lives, round, score;
@@ -121,8 +126,8 @@ void setup() {
 	ufoPos = new PVector(0, ufoStartPos);
 	ufoVel = new PVector(2.5, 2.5);
 	ufoEvent = false; 
-	ufoSpawnRand = 500; //  random number added to num of frames to spawn ufo
-	ufoSpawnLimit =  1000; // number of frames until ufo spawns
+	ufoSpawnRand = 500; // random number added to num of frames to spawn ufo
+	ufoSpawnLimit = 1000; // number of frames until ufo spawns
 	ufoRadius = 50;
 	eventChance = 0; // counter for frames. used to determine if events occur
 	ufoShotPos = new PVector();
@@ -254,14 +259,6 @@ void startScreen() {
 	image(startScreen, 0, 0);
 	fill(255);
 	int unit = height/12;
-	textFont(font, unit);
-	textAlign(LEFT, TOP);
-	text("ASTEROIDS", unit, unit * 2);
-	textFont(font, unit/2);
-	text("press space to start", unit, unit * 3);
-	text("W, A, S, D: move", unit, unit * 4);
-	text("SPACE: fire", unit, unit * 5);
-	text("P: pause", unit, unit * 6);
 	if (inSpacebar) {
 		gameStart = false;
 	}
@@ -492,6 +489,9 @@ void shipHit() {
 	/*
 	handles game behaviour when the ship has collided with an asteroid
 	*/
+	sfx = new SoundFile(this, "hit.wav");
+	sfx.play();
+
 	while (shotPos.length > 0) {
 		shotErase(0); //erase all shots
 	}
@@ -526,6 +526,8 @@ void fire() {
 	fires a new shot
 	*/
 	if (!inSpacebar) { //only one shot per keypress
+		sfx = new SoundFile(this, "pew.wav");
+		sfx.play();
 		PVector newPos = shipPos.copy();
 		shotPos = (PVector[])append(shotPos, newPos);
 		shipDir.normalize();
