@@ -14,6 +14,9 @@
 					- startScreen.png
 					- pew.wav
 					- hit.wav
+	Additionally, ensure that the following processing libraries have been
+	imported:
+					- Sound (The Processing Foundation)
 
 		Last Updated: 22/05/2019
 		Processing Version: 3.5.3
