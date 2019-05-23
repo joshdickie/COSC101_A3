@@ -269,7 +269,8 @@ void startScreen() {
 
 void gameOverScreen() {
 	/*
-	draws a heads-up display to the screen
+	displays a game over screen, showing the player their score
+	and prompting them to play again
 	*/
 	fill(255);
 	textFont(font, height/12);
@@ -305,8 +306,7 @@ void pauseScreen() {
 
 void hud() {
 	/*
-	displays a game over screen, showing the player their score
-	and prompting them to play again
+	draws a heads-up display to the screen
 	*/
 	fill(255);
 	textFont(font, height/12);
