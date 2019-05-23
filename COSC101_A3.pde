@@ -15,7 +15,7 @@
 					- pew.wav
 					- hit.wav
 	Additionally, ensure that the following processing libraries have been
-	imported:
+	installed:
 					- Sound (The Processing Foundation)
 
 		Last Updated: 22/05/2019
@@ -410,8 +410,8 @@ void shipMove() {
 	}
 
 	shipVel.limit(shipVelMax);
-	shipPos.add(shipVel);
 	shipVel.mult(shipDrag);
+	shipPos.add(shipVel);
 
 	if (shipPos.x + shipScale < 0 ||
 		shipPos.x - shipScale > width ||
@@ -531,8 +531,9 @@ void fire() {
 	if (!inSpacebar) { //only one shot per keypress
 		sfx = new SoundFile(this, "pew.wav");
 		sfx.play();
-		PVector newPos = shipPos.copy();
-		shotPos = (PVector[])append(shotPos, newPos);
+
+		PVector ship = shipPos.copy();
+		shotPos = (PVector[])append(shotPos, ship);
 		shipDir.normalize();
 		PVector newVel = new PVector();
 		newVel = shipDir.copy();
@@ -597,7 +598,7 @@ void shotWrap(int i) {
 
 void shotErase(int i) {
 	/*
-	erases shots that have surpassed their lifespan
+	erases a shot, removing all data pertaining to it
 	args: i - the index of the shot to be erased
 	*/
 	shotPos[i] = shotPos[shotPos.length - 1];
