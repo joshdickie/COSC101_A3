@@ -18,6 +18,9 @@
 	installed:
 					- Sound (The Processing Foundation)
 
+	OCRAExtended-30.vlw was sourced from the Processing ide font library.
+	pew.wav and hit.wav were sourced from: https://freesound.org/home/
+
 		Last Updated: 22/05/2019
 		Processing Version: 3.5.3
 ******************************************************************************/
